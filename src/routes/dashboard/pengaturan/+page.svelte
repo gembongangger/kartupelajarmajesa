@@ -1,306 +1,229 @@
 <script lang="ts">
-    import { enhance } from '$app/forms';
-    let { data, form } = $props();
-    let pengaturan = $derived(data.pengaturan);
+	import { enhance } from '$app/forms';
 
-    let logoPreviewOverride = $state('');
-    let ttdPreviewOverride = $state('');
-    let bgPreviewOverride = $state('');
-    let bg2PreviewOverride = $state('');
+	let { data, form } = $props();
+	let pengaturan = $derived(data.pengaturan);
 
-    let logoPreview = $derived(logoPreviewOverride || (pengaturan.has_logo ? '/pengaturan/gambar/logo' : ''));
-    let ttdPreview = $derived(ttdPreviewOverride || (pengaturan.has_tanda_tangan ? '/pengaturan/gambar/tanda_tangan' : ''));
-    let bgPreview = $derived(bgPreviewOverride || (pengaturan.has_background ? '/pengaturan/gambar/background' : ''));
-    let bg2Preview = $derived(bg2PreviewOverride || (pengaturan.has_background_belakang ? '/pengaturan/gambar/background_belakang' : ''));
+	let logoPreviewOverride = $state('');
+	let ttdPreviewOverride = $state('');
+	let bgPreviewOverride = $state('');
+	let bg2PreviewOverride = $state('');
 
-    let submitting = $state(false);
-    let notify: { type: 'success' | 'error'; message: string } | null = $state(null);
+	let logoPreview = $derived(logoPreviewOverride || (pengaturan.has_logo ? '/pengaturan/gambar/logo' : ''));
+	let ttdPreview = $derived(ttdPreviewOverride || (pengaturan.has_tanda_tangan ? '/pengaturan/gambar/tanda_tangan' : ''));
+	let bgPreview = $derived(bgPreviewOverride || (pengaturan.has_background ? '/pengaturan/gambar/background' : ''));
+	let bg2Preview = $derived(bg2PreviewOverride || (pengaturan.has_background_belakang ? '/pengaturan/gambar/background_belakang' : ''));
 
-    function handlePreview(event: Event, type: string) {
-        const input = event.target as HTMLInputElement;
-        const file = input.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const result = e.target?.result as string;
-                if (type === 'logo') logoPreviewOverride = result;
-                if (type === 'ttd') ttdPreviewOverride = result;
-                if (type === 'bg') bgPreviewOverride = result;
-                if (type === 'bg2') bg2PreviewOverride = result;
-            };
-            reader.readAsDataURL(file);
-        }
-    }
+	let submitting = $state(false);
+	let notify: { type: 'success' | 'error'; message: string } | null = $state(null);
 
-    let kelasText = $state('');
-    let submittingKelas = $state(false);
+	function handlePreview(event: Event, type: string) {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const result = e.target?.result as string;
+				if (type === 'logo') logoPreviewOverride = result;
+				if (type === 'ttd') ttdPreviewOverride = result;
+				if (type === 'bg') bgPreviewOverride = result;
+				if (type === 'bg2') bg2PreviewOverride = result;
+			};
+			reader.readAsDataURL(file);
+		}
+	}
 
-    $effect(() => {
-        if (data.kelas) {
-            kelasText = data.kelas.map((k: any) => k.nama).join('\n');
-        }
-    });
+	let kelasText = $state('');
+	let submittingKelas = $state(false);
 
-    function handleSubmit() {
-        submitting = true;
+	$effect(() => {
+		if (data.kelas) {
+			kelasText = data.kelas.map((k: any) => k.nama).join('\n');
+		}
+	});
 
-        return async ({ result, update }: { result: any; update: () => void }) => {
-            update();
-            submitting = false;
-            if (result.type === 'success' && result.data?.success) {
-                notify = { type: 'success', message: 'Pengaturan berhasil disimpan' };
-            } else if (result.type === 'failure' && result.data?.message) {
-                notify = { type: 'error', message: result.data.message };
-            } else {
-                notify = { type: 'error', message: 'Gagal menyimpan pengaturan' };
-            }
+	function handleSubmit() {
+		submitting = true;
+		return async ({ result, update }: { result: any; update: () => void }) => {
+			update();
+			submitting = false;
+			if (result.type === 'success' && result.data?.success) {
+				notify = { type: 'success', message: 'Pengaturan berhasil disimpan' };
+			} else if (result.type === 'failure' && result.data?.message) {
+				notify = { type: 'error', message: result.data.message };
+			} else {
+				notify = { type: 'error', message: 'Gagal menyimpan pengaturan' };
+			}
+			setTimeout(() => { notify = null; }, 4000);
+		};
+	}
 
-            setTimeout(() => { notify = null; }, 4000);
-        };
-    }
-
-    function handleSubmitKelas() {
-        submittingKelas = true;
-        return async ({ result, update }: { result: any; update: () => void }) => {
-            update();
-            submittingKelas = false;
-            if (result.type === 'success' && result.data?.success) {
-                notify = { type: 'success', message: 'Kelas berhasil disimpan' };
-            } else if (result.type === 'failure' && result.data?.message) {
-                notify = { type: 'error', message: result.data.message };
-            } else {
-                notify = { type: 'error', message: 'Gagal menyimpan kelas' };
-            }
-            setTimeout(() => { notify = null; }, 4000);
-        };
-    }
+	function handleSubmitKelas() {
+		submittingKelas = true;
+		return async ({ result, update }: { result: any; update: () => void }) => {
+			update();
+			submittingKelas = false;
+			if (result.type === 'success' && result.data?.success) {
+				notify = { type: 'success', message: 'Kelas berhasil disimpan' };
+			} else if (result.type === 'failure' && result.data?.message) {
+				notify = { type: 'error', message: result.data.message };
+			} else {
+				notify = { type: 'error', message: 'Gagal menyimpan kelas' };
+			}
+			setTimeout(() => { notify = null; }, 4000);
+		};
+	}
 </script>
 
+<div class="max-w-xl mx-auto">
+	<a href="/dashboard" class="inline-flex items-center gap-1 text-sm text-cf-blue hover:text-cf-blue-hover mb-4">
+		← Kembali ke Dashboard
+	</a>
+
+	<h1 class="text-2xl font-bold text-cf-text mb-6">Pengaturan Sekolah</h1>
+
+	<div class="bg-white rounded-xl border border-cf-border p-6 mb-6">
+		<h2 class="text-lg font-semibold text-cf-text mb-4">Profil Sekolah</h2>
+		<form method="POST" action="?/simpan" enctype="multipart/form-data" use:enhance={handleSubmit} class="space-y-4">
+			<div>
+				<label for="nama_sekolah" class="block text-sm font-medium text-cf-text mb-1">Nama Sekolah:</label>
+				<input type="text" name="nama_sekolah" id="nama_sekolah" value={pengaturan.nama_sekolah} required
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+			</div>
+			<div>
+				<label for="alamat" class="block text-sm font-medium text-cf-text mb-1">Alamat:</label>
+				<textarea name="alamat" id="alamat" rows="3" required
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition resize-y">{pengaturan.alamat}</textarea>
+			</div>
+			<div>
+				<label for="kota_ttd" class="block text-sm font-medium text-cf-text mb-1">Kota Tanda Tangan:</label>
+				<input type="text" name="kota_ttd" id="kota_ttd" value={pengaturan.kota_ttd}
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+			</div>
+			<div>
+				<label for="tata_tertib" class="block text-sm font-medium text-cf-text mb-1">Tata Tertib / Keterangan Kartu:</label>
+				<textarea name="tata_tertib" id="tata_tertib" rows="4"
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition resize-y">{pengaturan.tata_tertib}</textarea>
+			</div>
+			<div>
+				<label for="kepala_sekolah" class="block text-sm font-medium text-cf-text mb-1">Kepala Sekolah:</label>
+				<input type="text" name="kepala_sekolah" id="kepala_sekolah" value={pengaturan.kepala_sekolah} required
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+			</div>
+			<div>
+				<label for="nip_kepala_sekolah" class="block text-sm font-medium text-cf-text mb-1">NIP Kepala Sekolah:</label>
+				<input type="text" name="nip_kepala_sekolah" id="nip_kepala_sekolah" value={pengaturan.nip_kepala_sekolah} required
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+			</div>
+			<div>
+				<label for="tanggal_ttd" class="block text-sm font-medium text-cf-text mb-1">Tanggal TTD:</label>
+				<input type="date" name="tanggal_ttd" id="tanggal_ttd" value={pengaturan.tanggal_ttd} required
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+			</div>
+			<div>
+				<label for="logo" class="block text-sm font-medium text-cf-text mb-1">Logo (.png):</label>
+				<input type="file" name="logo" id="logo" accept=".png" onchange={(e) => handlePreview(e, 'logo')}
+					class="w-full text-sm text-cf-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-cf-orange/10 file:text-cf-orange hover:file:bg-cf-orange/20">
+				{#if logoPreview}
+					<img src={logoPreview} alt="Logo" class="mt-2 max-w-[200px] h-auto border border-cf-border rounded-lg">
+				{/if}
+			</div>
+			<div>
+				<label for="tanda_tangan" class="block text-sm font-medium text-cf-text mb-1">Tanda Tangan Kepala Sekolah:</label>
+				<input type="file" name="tanda_tangan" id="tanda_tangan" onchange={(e) => handlePreview(e, 'ttd')}
+					class="w-full text-sm text-cf-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-cf-orange/10 file:text-cf-orange hover:file:bg-cf-orange/20">
+				{#if ttdPreview}
+					<img src={ttdPreview} alt="Tanda Tangan" class="mt-2 max-w-[200px] h-auto border border-cf-border rounded-lg">
+				{/if}
+			</div>
+			<div>
+				<label for="background" class="block text-sm font-medium text-cf-text mb-1">Background Kartu:</label>
+				<input type="file" name="background" id="background" onchange={(e) => handlePreview(e, 'bg')}
+					class="w-full text-sm text-cf-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-cf-orange/10 file:text-cf-orange hover:file:bg-cf-orange/20">
+				{#if bgPreview}
+					<img src={bgPreview} alt="Background" class="mt-2 max-w-[200px] h-auto border border-cf-border rounded-lg">
+				{/if}
+			</div>
+			<div>
+				<label for="background_belakang" class="block text-sm font-medium text-cf-text mb-1">Background Kartu Belakang:</label>
+				<input type="file" name="background_belakang" id="background_belakang" onchange={(e) => handlePreview(e, 'bg2')}
+					class="w-full text-sm text-cf-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-cf-orange/10 file:text-cf-orange hover:file:bg-cf-orange/20">
+				{#if bg2Preview}
+					<img src={bg2Preview} alt="Background Belakang" class="mt-2 max-w-[200px] h-auto border border-cf-border rounded-lg">
+				{/if}
+			</div>
+
+			<hr class="border-cf-border my-6">
+
+			<h3 class="font-semibold text-cf-text">Ubah Password Admin</h3>
+			<div>
+				<label for="password_lama" class="block text-sm font-medium text-cf-text mb-1">Password Lama:</label>
+				<input type="password" name="password_lama" id="password_lama"
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+			</div>
+			<div>
+				<label for="password_baru" class="block text-sm font-medium text-cf-text mb-1">Password Baru:</label>
+				<input type="password" name="password_baru" id="password_baru"
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+			</div>
+			<div>
+				<label for="konfirmasi_password" class="block text-sm font-medium text-cf-text mb-1">Konfirmasi Password Baru:</label>
+				<input type="password" name="konfirmasi_password" id="konfirmasi_password"
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+			</div>
+
+			<button type="submit" disabled={submitting}
+				class="w-full py-2.5 bg-cf-orange hover:bg-cf-orange-hover disabled:bg-cf-orange/60 text-white font-semibold rounded-lg text-sm transition flex items-center justify-center gap-2 cursor-pointer"
+			>
+				{#if submitting}
+					<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+					</svg>
+					Menyimpan...
+				{:else}
+					Simpan Pengaturan
+				{/if}
+			</button>
+		</form>
+	</div>
+
+	<div class="bg-white rounded-xl border border-cf-border p-6">
+		<h2 class="text-lg font-semibold text-cf-text mb-4">Data Kelas</h2>
+		<form method="POST" action="?/simpan_kelas" use:enhance={handleSubmitKelas}>
+			<div>
+				<label for="kelas" class="block text-sm font-medium text-cf-text mb-1">Daftar Kelas (satu baris per kelas):</label>
+				<textarea name="kelas" id="kelas" rows="6" bind:value={kelasText}
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition resize-y"></textarea>
+			</div>
+			<button type="submit" disabled={submittingKelas}
+				class="w-full mt-4 py-2.5 bg-cf-orange hover:bg-cf-orange-hover disabled:bg-cf-orange/60 text-white font-semibold rounded-lg text-sm transition flex items-center justify-center gap-2 cursor-pointer"
+			>
+				{#if submittingKelas}
+					<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+					</svg>
+					Menyimpan...
+				{:else}
+					Simpan Kelas
+				{/if}
+			</button>
+		</form>
+	</div>
+</div>
+
+{#if notify}
+	<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+		<div class="px-5 py-3 rounded-lg text-sm font-medium shadow-lg animate-[fadeInUp_0.25s_ease-out] {notify.type === 'success' ? 'bg-green-50 text-cf-success border border-green-200' : 'bg-red-50 text-cf-danger border border-red-200'}">
+			{notify.message}
+		</div>
+	</div>
+{/if}
+
 <style>
-    .settings-body {
-        background-color: #f0f2f5;
-        color: #1c1e21;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        margin: 0;
-        padding: 20px;
-        min-height: 100vh;
-    }
-
-    h2 { text-align: center; color: #145DA0; }
-
-    form {
-        max-width: 600px;
-        margin: 20px auto;
-        background-color: #ffffff;
-        padding: 25px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-    p { margin-bottom: 15px; }
-
-    label { font-weight: bold; display: block; margin-bottom: 5px; }
-
-    input[type="text"],
-    input[type="date"],
-    input[type="password"],
-    textarea,
-    input[type="file"] {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccd0d5;
-        border-radius: 6px;
-        background-color: #fff;
-        box-sizing: border-box;
-    }
-
-    img.preview {
-        margin-top: 10px;
-        max-width: 100%;
-        height: auto;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
-
-    button {
-        background-color: #145DA0;
-        color: #fff;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 16px;
-        width: 100%;
-        margin-top: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    button:hover { background-color: #004c81; }
-    button:disabled { background-color: #7fa8c9; cursor: not-allowed; }
-
-    .spinner {
-        width: 18px;
-        height: 18px;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-top: 2px solid #fff;
-        border-radius: 50%;
-        animation: spin 0.6s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .notif-container {
-        position: fixed;
-        bottom: 24px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 999;
-        pointer-events: none;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .notif {
-        padding: 14px 28px;
-        border-radius: 8px;
-        font-size: 15px;
-        font-weight: 500;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-        pointer-events: auto;
-        animation: fadeInUp 0.25s ease-out;
-    }
-
-    .notif.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    .notif.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(12px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .back-link {
-        display: block;
-        text-align: center;
-        margin-top: 20px;
-        color: #145DA0;
-        text-decoration: none;
-    }
-
-    .back-link:hover { text-decoration: underline; }
-
-    .error { color: #dc3545; text-align: center; margin-bottom: 1rem; }
+	@keyframes fadeInUp {
+		from { opacity: 0; transform: translateY(12px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
 </style>
-
-<div class="settings-body">
-    <h2>Pengaturan Sekolah</h2>
-
-    <form method="POST" action="?/simpan" enctype="multipart/form-data" use:enhance={handleSubmit}>
-        <p>
-            <label for="nama_sekolah">Nama Sekolah:</label>
-            <input type="text" name="nama_sekolah" id="nama_sekolah" value={pengaturan.nama_sekolah} required>
-        </p>
-        <p>
-            <label for="alamat">Alamat:</label>
-            <textarea name="alamat" id="alamat" rows="3" required>{pengaturan.alamat}</textarea>
-        </p>
-        <p>
-            <label for="kota_ttd">Kota Tanda Tangan:</label>
-            <input type="text" name="kota_ttd" id="kota_ttd" value={pengaturan.kota_ttd}>
-        </p>
-        <p>
-            <label for="tata_tertib">Tata Tertib / Keterangan Kartu:</label>
-            <textarea name="tata_tertib" id="tata_tertib" rows="4">{pengaturan.tata_tertib}</textarea>
-        </p>
-        <p>
-            <label for="kepala_sekolah">Kepala Sekolah:</label>
-            <input type="text" name="kepala_sekolah" id="kepala_sekolah" value={pengaturan.kepala_sekolah} required>
-        </p>
-        <p>
-            <label for="nip_kepala_sekolah">NIP Kepala Sekolah:</label>
-            <input type="text" name="nip_kepala_sekolah" id="nip_kepala_sekolah" value={pengaturan.nip_kepala_sekolah} required>
-        </p>
-        <p>
-            <label for="tanggal_ttd">Tanggal TTD:</label>
-            <input type="date" name="tanggal_ttd" id="tanggal_ttd" value={pengaturan.tanggal_ttd} required>
-        </p>
-        <p>
-            <label for="logo">Logo (.png):</label>
-            <input type="file" name="logo" id="logo" accept=".png" onchange={(e) => handlePreview(e, 'logo')}>
-            {#if logoPreview}
-                <img src={logoPreview} alt="Logo" class="preview">
-            {/if}
-        </p>
-        <p>
-            <label for="tanda_tangan">Tanda Tangan Kepala Sekolah:</label>
-            <input type="file" name="tanda_tangan" id="tanda_tangan" onchange={(e) => handlePreview(e, 'ttd')}>
-            {#if ttdPreview}
-                <img src={ttdPreview} alt="Tanda Tangan" class="preview">
-            {/if}
-        </p>
-        <p>
-            <label for="background">Background Kartu:</label>
-            <input type="file" name="background" id="background" onchange={(e) => handlePreview(e, 'bg')}>
-            {#if bgPreview}
-                <img src={bgPreview} alt="Background" class="preview">
-            {/if}
-        </p>
-        <p>
-            <label for="background_belakang">Background Kartu Belakang:</label>
-            <input type="file" name="background_belakang" id="background_belakang" onchange={(e) => handlePreview(e, 'bg2')}>
-            {#if bg2Preview}
-                <img src={bg2Preview} alt="Background Belakang" class="preview">
-            {/if}
-        </p>
-
-        <hr>
-        <h3>Ubah Password Admin</h3>
-        <p>
-            <label for="password_lama">Password Lama:</label>
-            <input type="password" name="password_lama" id="password_lama">
-        </p>
-        <p>
-            <label for="password_baru">Password Baru:</label>
-            <input type="password" name="password_baru" id="password_baru">
-        </p>
-        <p>
-            <label for="konfirmasi_password">Konfirmasi Password Baru:</label>
-            <input type="password" name="konfirmasi_password" id="konfirmasi_password">
-        </p>
-
-        <button type="submit" disabled={submitting}>
-            {#if submitting}
-                <span class="spinner"></span>
-                Menyimpan...
-            {:else}
-                Simpan Pengaturan
-            {/if}
-        </button>
-    </form>
-    <hr style="margin-top: 30px;">
-    <h3>Data Kelas</h3>
-    <form method="POST" action="?/simpan_kelas" use:enhance={handleSubmitKelas}>
-        <p>
-            <label for="kelas">Daftar Kelas (satu baris per kelas):</label>
-            <textarea name="kelas" id="kelas" rows="6" bind:value={kelasText}></textarea>
-        </p>
-        <button type="submit" disabled={submittingKelas}>
-            {#if submittingKelas}
-                <span class="spinner"></span>
-                Menyimpan...
-            {:else}
-                Simpan Kelas
-            {/if}
-        </button>
-    </form>
-    <a href="/dashboard" class="back-link">← Kembali ke Dashboard</a>
-</div>
-
-<div class="notif-container">
-    {#if notify}
-        <div class="notif {notify.type}">{notify.message}</div>
-    {/if}
-</div>

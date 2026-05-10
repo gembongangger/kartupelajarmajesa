@@ -1,7 +1,11 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import db from '$lib/server/db';
-import crypto from 'node:crypto';
+
+async function md5(data: string): Promise<string> {
+	const hash = await crypto.subtle.digest('MD5', new TextEncoder().encode(data));
+	return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user || locals.user.role !== 'admin') {
@@ -68,9 +72,8 @@ export const actions: Actions = {
                 VALUES (1, 'SD NEGERI BERMUTU', 'Jalan Kebagusan, RT.27 RW.05 Kelurahan Sumberberkah, Kec. Gemahripah', 'Nir Singgih Purwantio, S.Pd.', '198705092021021004', '2025-07-14');
             `);
 
-            // Set default admin password to 'admin123'
-            const adminPass = crypto.createHash('md5').update('admin123').digest('hex');
-            await db.execute({
+			const adminPass = await md5('admin123');
+			await db.execute({
                 sql: 'INSERT INTO users (id, username, password, role) VALUES (1, ?, ?, ?)',
                 args: ['admin', adminPass, 'admin']
             });
