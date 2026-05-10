@@ -31,16 +31,16 @@
 	<aside
 		class="fixed inset-y-0 left-0 z-50 w-64 bg-cf-sidebar-bg transform transition duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto flex flex-col {sidebarOpen ? 'translate-x-0' : '-translate-x-full'}"
 	>
-		<div class="flex items-center gap-3 px-5 h-16 border-b border-white/10 shrink-0">
-			<GraduationCap class="text-white shrink-0" size={26} />
-			<span class="font-semibold text-white text-lg">Kartu Pelajar</span>
+		<div class="flex items-center gap-3 px-5 h-16 border-b border-cf-border shrink-0">
+			<GraduationCap class="text-cf-orange shrink-0" size={26} />
+			<span class="font-semibold text-cf-text text-lg">Kartu Pelajar</span>
 		</div>
 
 		<nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
 			{#each nav as item}
 				<a
 					href={item.href}
-					class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-cf-sidebar-hover hover:text-white transition-colors {activePath === item.href ? 'bg-cf-sidebar-active/10 text-white' : 'text-cf-sidebar-text'}"
+					class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-cf-sidebar-hover hover:text-cf-text transition-colors {activePath === item.href ? 'bg-cf-sidebar-active/10 text-cf-orange' : 'text-cf-sidebar-text'}"
 				>
 					<item.icon class="shrink-0" size={20} />
 					{item.label}
@@ -51,7 +51,7 @@
 		<div class="px-3 pb-4 shrink-0">
 			<a
 				href="/logout"
-				class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-cf-sidebar-text hover:bg-cf-sidebar-hover hover:text-white transition-colors"
+				class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-cf-sidebar-text hover:bg-cf-sidebar-hover hover:text-cf-text transition-colors"
 			>
 				<LogOut class="shrink-0" size={20} />
 				Logout
