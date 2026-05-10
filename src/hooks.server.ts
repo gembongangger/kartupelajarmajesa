@@ -1,6 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import db from '$lib/server/db';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 let inited = false;
 

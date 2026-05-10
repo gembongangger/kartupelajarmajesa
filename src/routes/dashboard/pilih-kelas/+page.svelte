@@ -1,11 +1,27 @@
 <script lang="ts">
+    import { browser } from '$app/environment';
     let { data } = $props();
 
     let submitting = $state(false);
+    let selectedKelas = $state('');
 
-    function handleSubmit() {
+    async function handlePrint(e: Event) {
+        e.preventDefault();
+        if (!selectedKelas || !browser) return;
+        
         submitting = true;
-        setTimeout(() => { submitting = false; }, 2000);
+        try {
+            const res = await fetch(`/dashboard/cetak?kelas=${encodeURIComponent(selectedKelas)}`);
+            if (!res.ok) throw new Error('Failed to fetch print data');
+            const data = await res.json();
+            const { printCards } = await import('$lib/client/printer');
+            await printCards(data);
+        } catch (err) {
+            alert('Gagal mengambil data cetak');
+            console.error(err);
+        } finally {
+            submitting = false;
+        }
     }
 </script>
 
@@ -84,19 +100,19 @@
     <div class="container">
         <h2>Cetak Kartu Pelajar</h2>
 
-        <form method="GET" action="/dashboard/cetak" target="_blank" onsubmit={handleSubmit}>
+        <form onsubmit={handlePrint}>
             <label for="kelas">Pilih Kelas:</label>
-            <select name="kelas" id="kelas" required>
+            <select bind:value={selectedKelas} id="kelas" required>
                 <option value="">-- Pilih Kelas --</option>
                 {#each data.classes as k}
                     <option value={k.kelas}>{k.kelas}</option>
                 {/each}
             </select>
 
-            <button type="submit" disabled={submitting}>
+            <button type="submit" disabled={submitting || !selectedKelas}>
                 {#if submitting}
                     <span class="spinner"></span>
-                    Mencetak...
+                    Menyiapkan Kartu...
                 {:else}
                     Cetak Kartu
                 {/if}

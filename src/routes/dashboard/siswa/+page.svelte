@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
 	let { data } = $props();
 
 	let search = $state(data.q || '');
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+	let printingNisn = $state<string | null>(null);
 
 	function onSearchInput(e: Event) {
 		const val = (e.target as HTMLInputElement).value;
@@ -24,6 +26,23 @@
 		if (data.q) params.set('q', data.q);
 		params.set('page', String(p));
 		goto(`?${params}`, { replaceState: true, keepFocus: true });
+	}
+
+	async function handlePrint(nisn: string) {
+		if (printingNisn || !browser) return;
+		printingNisn = nisn;
+		try {
+			const res = await fetch(`/dashboard/cetak?nisn=${encodeURIComponent(nisn)}`);
+			if (!res.ok) throw new Error('Failed to fetch print data');
+			const data = await res.json();
+			const { printCards } = await import('$lib/client/printer');
+			await printCards(data);
+		} catch (err) {
+			alert('Gagal mengambil data cetak');
+			console.error(err);
+		} finally {
+			printingNisn = null;
+		}
 	}
 </script>
 
@@ -51,6 +70,8 @@
 	.button-edit:hover { background: #1e7e34; }
 	.button-delete { background: #dc3545; }
 	.button-delete:hover { background: #b02a37; }
+	.button-print { background: #007bff; color: white; }
+	.button-print:disabled { background: #ccc; cursor: not-allowed; }
 
 	.pagination {
 		display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -112,7 +133,9 @@
 					<td data-label="Tgl Lahir">{row.tanggal_lahir}</td>
 					<td data-label="Aksi">
 						<a class="button button-edit" href="/dashboard/siswa/edit/{row.nisn}">Edit</a>
-						<a class="button" href="/dashboard/cetak?nisn={row.nisn}" target="_blank">Cetak</a>
+						<button class="button button-print" onclick={() => handlePrint(row.nisn)} disabled={printingNisn === row.nisn}>
+							{printingNisn === row.nisn ? '...' : 'Cetak'}
+						</button>
 						<form method="POST" action="?/delete" style="display:inline" use:enhance
 							onsubmit={(e) => { if (!confirm('Yakin ingin menghapus siswa ini?')) e.preventDefault(); }}>
 							<input type="hidden" name="nisn" value={row.nisn}>

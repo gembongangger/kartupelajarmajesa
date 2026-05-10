@@ -1,0 +1,8 @@
+name = "kartupelajar-cloudflare"
+pages_build_output_dir = ".svelte-kit/cloudflare"
+compatibility_date = "2024-04-03"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+TURSO_CONNECTION_URL = "libsql://kartu-pelajar-gembongangger.aws-ap-south-1.turso.io"
+TURSO_AUTH_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzgyNjA4NjgsImlkIjoiMDE5ZTA4OTktZDIwMS03MDE0LWE0MGMtNDg4MzQzZGI5ZGZiIiwicmlkIjoiMjYwMTkzN2EtZjQ4MC00YmFiLWFjNjUtNTU0YjM4YjdjZmIwIn0._mfoXjYWKWlDbZzGQovc1U3v6rl4PunElKay9TjyyWKuDDPDeSakA9EUvgSy2lAWBha0HF3U592uRNen5SKzBQ"

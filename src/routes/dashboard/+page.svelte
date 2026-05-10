@@ -1,9 +1,11 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import { browser } from '$app/environment';
     let { data, form } = $props();
 
     let submittingReset = $state(false);
     let submittingLogout = $state(false);
+    let printingAll = $state(false);
 
     function handleReset() {
         if (!confirm('Yakin ingin mereset database? Semua data akan hilang!')) return;
@@ -15,6 +17,23 @@
 
     function handleLogout() {
         submittingLogout = true;
+    }
+
+    async function handlePrintAll() {
+        if (printingAll || !browser) return;
+        printingAll = true;
+        try {
+            const res = await fetch('/dashboard/cetak');
+            if (!res.ok) throw new Error('Failed to fetch print data');
+            const data = await res.json();
+            const { printCards } = await import('$lib/client/printer');
+            await printCards(data);
+        } catch (err) {
+            alert('Gagal mengambil data cetak');
+            console.error(err);
+        } finally {
+            printingAll = false;
+        }
     }
 </script>
 
@@ -111,7 +130,16 @@
         <li><a href="/dashboard/upload-foto" class="powerpoint">Upload Foto Siswa (Pilih)</a></li>
         <li><a href="/dashboard/pengaturan" class="word">Pengaturan Profil Sekolah</a></li>
         <li><a href="/dashboard/pilih-kelas" class="canva">Cetak Kartu Per Kelas</a></li>
-        <li><a href="/dashboard/cetak" class="default" target="_blank">Cetak Semua Kartu</a></li>
+        <li>
+            <button type="button" class="default" onclick={handlePrintAll} disabled={printingAll}>
+                {#if printingAll}
+                    <span class="spinner"></span>
+                    Menyiapkan Kartu...
+                {:else}
+                    Cetak Semua Kartu
+                {/if}
+            </button>
+        </li>
         <li><a href="/dashboard/siswa" class="default">Daftar Nama Siswa</a></li>
         <li>
             <form method="POST" action="?/reset" use:enhance={handleReset}>

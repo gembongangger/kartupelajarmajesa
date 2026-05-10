@@ -1,23 +1,23 @@
-import fs from 'fs';
-import path from 'path';
+import { Buffer } from 'node:buffer';
 
-export function fileToBlobValue(buffer: Buffer): Uint8Array {
+export function fileToBlobValue(buffer: Buffer | ArrayBuffer | Uint8Array): Uint8Array {
+    if (buffer instanceof Uint8Array) return buffer;
     return new Uint8Array(buffer);
 }
 
-export function photoValueToBuffer(value: unknown): Buffer | null {
+export function photoValueToBuffer(value: unknown): Uint8Array | null {
     if (!value) return null;
 
-    if (Buffer.isBuffer(value)) {
-        return value;
+    if (value instanceof ArrayBuffer) {
+        return new Uint8Array(value);
     }
 
     if (value instanceof Uint8Array) {
-        return Buffer.from(value);
+        return value;
     }
 
-    if (value instanceof ArrayBuffer) {
-        return Buffer.from(value);
+    if (typeof Buffer !== 'undefined' && Buffer.isBuffer(value)) {
+        return new Uint8Array(value);
     }
 
     if (typeof value === 'string') {
@@ -25,7 +25,12 @@ export function photoValueToBuffer(value: unknown): Buffer | null {
         if (!base64) return null;
 
         try {
-            return Buffer.from(base64, 'base64');
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
         } catch {
             return null;
         }
@@ -34,14 +39,17 @@ export function photoValueToBuffer(value: unknown): Buffer | null {
     return null;
 }
 
-export function getDefaultPhotoBuffer(): Buffer | null {
-    const defaultPath = path.join('static', 'foto', 'default.jpg');
-
-    if (!fs.existsSync(defaultPath)) {
-        return null;
+export function uint8ArrayToBase64(uint8: Uint8Array): string {
+    let binary = '';
+    const len = uint8.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(uint8[i]);
     }
+    return btoa(binary);
+}
 
-    return fs.readFileSync(defaultPath);
+export function getDefaultPhotoBuffer(): Uint8Array | null {
+    return null;
 }
 
 export function imageMimeFromFile(file: File): string {
@@ -56,8 +64,10 @@ export function imageMimeFromFile(file: File): string {
     return 'application/octet-stream';
 }
 
-export function imageFormatFromBuffer(buffer: Buffer): 'PNG' | 'JPEG' | null {
-    if (buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+export function imageFormatFromBuffer(buffer: Uint8Array): 'PNG' | 'JPEG' | null {
+    if (buffer.length >= 8 && 
+        buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47 &&
+        buffer[4] === 0x0d && buffer[5] === 0x0a && buffer[6] === 0x1a && buffer[7] === 0x0a) {
         return 'PNG';
     }
 

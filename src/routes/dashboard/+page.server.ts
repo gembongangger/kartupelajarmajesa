@@ -1,10 +1,7 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import db from '$lib/server/db';
-import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
-import { fileToBlobValue } from '$lib/server/photo';
+import crypto from 'node:crypto';
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user || locals.user.role !== 'admin') {
@@ -71,34 +68,6 @@ export const actions: Actions = {
                 VALUES (1, 'SD NEGERI BERMUTU', 'Jalan Kebagusan, RT.27 RW.05 Kelurahan Sumberberkah, Kec. Gemahripah', 'Nir Singgih Purwantio, S.Pd.', '198705092021021004', '2025-07-14');
             `);
 
-            const readAsset = (folder: string, filename: string) => {
-                const filePath = path.join('static', 'assets', folder, filename);
-                return fs.existsSync(filePath) ? fileToBlobValue(fs.readFileSync(filePath)) : null;
-            };
-
-            await db.execute({
-                sql: `UPDATE pengaturan SET
-                    logo = ?,
-                    logo_mime = ?,
-                    tanda_tangan = ?,
-                    tanda_tangan_mime = ?,
-                    background = ?,
-                    background_mime = ?,
-                    background_belakang = ?,
-                    background_belakang_mime = ?
-                    WHERE id = 1`,
-                args: [
-                    readAsset('logo', 'logo_1753066228.png'),
-                    'image/png',
-                    readAsset('tanda_tangan', 'ttd_1753066228.png'),
-                    'image/png',
-                    readAsset('background', 'bg_1753067414.jpg'),
-                    'image/jpeg',
-                    readAsset('background_belakang', 'bg2_1753067767.jpg'),
-                    'image/jpeg'
-                ]
-            });
-
             // Set default admin password to 'admin123'
             const adminPass = crypto.createHash('md5').update('admin123').digest('hex');
             await db.execute({
@@ -106,7 +75,7 @@ export const actions: Actions = {
                 args: ['admin', adminPass, 'admin']
             });
 
-            return { success: true, message: 'Database berhasil di-reset. Password admin adalah admin123' };
+            return { success: true, message: 'Database berhasil di-reset. Password admin adalah admin123. Aset (logo/background) harus diunggah ulang secara manual.' };
         } catch (e: any) {
             return fail(500, { message: 'Reset failed: ' + e.message });
         }

@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import db from '$lib/server/db';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (locals.user) {

@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import db from '$lib/server/db';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { fileToBlobValue, imageMimeFromFile } from '$lib/server/photo';
 
 export const load: PageServerLoad = async ({ locals }) => {
