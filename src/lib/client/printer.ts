@@ -67,28 +67,34 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         }
 
         // Data Siswa
-        const colonX = x + 55;
+        const labelX = x + 24;
+        const colonX = labelX + 12;
         const valueX = colonX + 2;
 
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'bold');
-        doc.text('NAMA', colonX - 1, y + 16, { align: 'right' });
-        doc.text(':', colonX, y + 16);
-        doc.text(student.nama, valueX, y + 16);
-
         doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+        doc.text('NAMA', labelX, y + 16);
+        doc.text(':', colonX, y + 16);
         doc.setFont('helvetica', 'normal');
-        doc.text('NISN', colonX - 1, y + 20, { align: 'right' });
+        doc.text(student.nama, valueX, y + 16, { align: 'left' });
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('NISN', labelX, y + 20);
         doc.text(':', colonX, y + 20);
-        doc.text(student.nisn, valueX, y + 20);
+        doc.setFont('helvetica', 'normal');
+        doc.text(student.nisn, valueX, y + 20, { align: 'left' });
 
-        doc.text('TTL', colonX - 1, y + 24, { align: 'right' });
+        doc.setFont('helvetica', 'bold');
+        doc.text('TTL', labelX, y + 24);
         doc.text(':', colonX, y + 24);
-        doc.text(`${student.tempat_lahir}, ${tanggalIndonesia(student.tanggal_lahir)}`, valueX, y + 24);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${student.tempat_lahir}, ${tanggalIndonesia(student.tanggal_lahir)}`, valueX, y + 24, { align: 'left' });
 
-        doc.text('JK', colonX - 1, y + 28, { align: 'right' });
+        doc.setFont('helvetica', 'bold');
+        doc.text('JK', labelX, y + 28);
         doc.text(':', colonX, y + 28);
-        doc.text(student.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', valueX, y + 28);
+        doc.setFont('helvetica', 'normal');
+        doc.text(student.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', valueX, y + 28, { align: 'left' });
 
         // Barcode
         const barcodeDataURL = await generateBarcodeDataURL(student.nisn);
