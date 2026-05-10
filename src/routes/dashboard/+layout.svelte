@@ -1,17 +1,18 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { GraduationCap, LayoutDashboard, FileSpreadsheet, Camera, Settings, Printer, Users, LogOut } from 'lucide-svelte';
 
 	let { children } = $props();
 
 	let sidebarOpen = $state(false);
 
 	const nav = [
-		{ href: '/dashboard', label: 'Dashboard', icon: '📊' },
-		{ href: '/dashboard/upload-excel', label: 'Upload Excel', icon: '📗' },
-		{ href: '/dashboard/upload-foto', label: 'Upload Foto', icon: '📸' },
-		{ href: '/dashboard/pengaturan', label: 'Pengaturan', icon: '⚙️' },
-		{ href: '/dashboard/pilih-kelas', label: 'Cetak Per Kelas', icon: '🖨️' },
-		{ href: '/dashboard/siswa', label: 'Daftar Siswa', icon: '📋' },
+		{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+		{ href: '/dashboard/upload-excel', label: 'Upload Excel', icon: FileSpreadsheet },
+		{ href: '/dashboard/upload-foto', label: 'Upload Foto', icon: Camera },
+		{ href: '/dashboard/pengaturan', label: 'Pengaturan', icon: Settings },
+		{ href: '/dashboard/pilih-kelas', label: 'Cetak Per Kelas', icon: Printer },
+		{ href: '/dashboard/siswa', label: 'Daftar Siswa', icon: Users },
 	];
 
 	let activePath = $derived($page.url.pathname);
@@ -31,7 +32,7 @@
 		class="fixed inset-y-0 left-0 z-50 w-64 bg-cf-sidebar-bg transform transition duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto flex flex-col {sidebarOpen ? 'translate-x-0' : '-translate-x-full'}"
 	>
 		<div class="flex items-center gap-3 px-5 h-16 border-b border-white/10 shrink-0">
-			<span class="text-2xl">🎓</span>
+			<GraduationCap class="text-white shrink-0" size={26} />
 			<span class="font-semibold text-white text-lg">Kartu Pelajar</span>
 		</div>
 
@@ -41,7 +42,7 @@
 					href={item.href}
 					class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-cf-sidebar-hover hover:text-white transition-colors {activePath === item.href ? 'bg-cf-sidebar-active/10 text-white' : 'text-cf-sidebar-text'}"
 				>
-					<span class="text-lg">{item.icon}</span>
+					<item.icon class="shrink-0" size={20} />
 					{item.label}
 				</a>
 			{/each}
@@ -52,7 +53,7 @@
 				href="/logout"
 				class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-cf-sidebar-text hover:bg-cf-sidebar-hover hover:text-white transition-colors"
 			>
-				<span class="text-lg">🚪</span>
+				<LogOut class="shrink-0" size={20} />
 				Logout
 			</a>
 		</div>
