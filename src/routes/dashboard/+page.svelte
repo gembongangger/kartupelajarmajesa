@@ -50,7 +50,7 @@
 <div class="max-w-3xl mx-auto">
 	<div class="mb-6">
 		<h1 class="text-2xl font-bold text-cf-text">Dashboard</h1>
-		<p class="text-cf-muted text-sm mt-1">Selamat datang, {data.user.username}! <span class="text-cf-orange font-bold text-lg">TEST TAILWIND</span></p>
+		<p class="text-cf-muted text-sm mt-1">Selamat datang, {data.user?.username || 'Admin'}! <span class="text-cf-orange font-bold text-lg">TEST TAILWIND</span></p>
 	</div>
 
 	{#if form?.success}

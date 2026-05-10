@@ -1,12 +1,10 @@
+import { md5 } from '$lib/server/crypto';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import db from '$lib/server/db';
 import * as XLSX from 'xlsx';
 
-async function md5(data: string): Promise<string> {
-	const hash = await crypto.subtle.digest('MD5', new TextEncoder().encode(data));
-	return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
+
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user || locals.user.role !== 'admin') {

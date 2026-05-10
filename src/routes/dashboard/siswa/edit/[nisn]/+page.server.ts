@@ -25,6 +25,7 @@ export const actions: Actions = {
         if (!locals.user || locals.user.role !== 'admin') return fail(401);
 
         const data = await request.formData();
+        const newNisn = data.get('nisn');
         const nama = data.get('nama');
         const nis = data.get('nis');
         const kelas = data.get('kelas');
@@ -34,6 +35,7 @@ export const actions: Actions = {
 
         await db.execute({
             sql: `UPDATE siswa SET 
+                nisn = ?,
                 nama = ?,
                 nis = ?,
                 kelas = ?,
@@ -42,6 +44,7 @@ export const actions: Actions = {
                 tanggal_lahir = ?
                 WHERE nisn = ?`,
             args: [
+                newNisn?.toString(),
                 nama?.toString(), 
                 nis?.toString(), 
                 kelas?.toString(), 

@@ -1,11 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import db from '$lib/server/db';
-
-async function md5(data: string): Promise<string> {
-	const hash = await crypto.subtle.digest('MD5', new TextEncoder().encode(data));
-	return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
+import { md5 } from '$lib/server/crypto';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) {

@@ -1,12 +1,8 @@
 import type { Handle } from '@sveltejs/kit';
 import db from '$lib/server/db';
+import { md5 } from '$lib/server/crypto';
 
 let inited = false;
-
-async function md5(data: string): Promise<string> {
-	const hash = await crypto.subtle.digest('MD5', new TextEncoder().encode(data));
-	return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
 async function initDb() {
 	if (inited) return;

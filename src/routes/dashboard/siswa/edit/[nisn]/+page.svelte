@@ -24,6 +24,11 @@
 	<div class="bg-white rounded-xl border border-cf-border p-6">
 		<form method="POST" use:enhance={handleSubmit} class="space-y-4">
 			<div>
+				<label for="nisn" class="block text-sm font-medium text-cf-text mb-1">NISN</label>
+				<input type="text" name="nisn" id="nisn" value={student.nisn} required
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+			</div>
+			<div>
 				<label for="nama" class="block text-sm font-medium text-cf-text mb-1">Nama Lengkap</label>
 				<input type="text" name="nama" id="nama" value={student.nama} required
 					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
