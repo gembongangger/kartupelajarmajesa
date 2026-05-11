@@ -118,17 +118,17 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         doc.text(tataTertib, xBack + 5, y + 12, { maxWidth: 74 });
 
         // TTD
-        doc.text(ttdDate, xBack + 62, y + 36, { align: 'center' });
-        doc.text('Kepala Sekolah,', xBack + 62, y + 40, { align: 'center' });
+        doc.text(ttdDate, xBack + 62, y + 32, { align: 'center' });
+        doc.text('Kepala Sekolah,', xBack + 62, y + 36, { align: 'center' });
 
         if (pengaturan.tanda_tangan) {
-            doc.addImage(pengaturan.tanda_tangan, xBack + 52, y + 42, 20, 8);
+            doc.addImage(pengaturan.tanda_tangan, xBack + 52, y + 38, 20, 8);
         }
 
         doc.setFont('helvetica', 'bold');
-        doc.text(headMaster, xBack + 62, y + 51, { align: 'center' });
+        doc.text(headMaster, xBack + 62, y + 47, { align: 'center' });
         doc.setFont('helvetica', 'normal');
-        doc.text(headNip, xBack + 62, y + 54, { align: 'center' });
+        doc.text(headNip, xBack + 62, y + 50, { align: 'center' });
     }
 
     doc.save('Kartu_Pelajar.pdf');
