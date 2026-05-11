@@ -101,7 +101,7 @@
 					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
 			</div>
 			<div>
-				<label for="tata_tertib" class="block text-sm font-medium text-cf-text mb-1">Tata Tertib / Keterangan Kartu:</label>
+				<label for="tata_tertib" class="block text-sm font-medium text-cf-text mb-1">Tata Tertib/Keterangan Kartu:</label>
 				<textarea name="tata_tertib" id="tata_tertib" rows="4"
 					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition resize-y">{pengaturan.tata_tertib}</textarea>
 			</div>

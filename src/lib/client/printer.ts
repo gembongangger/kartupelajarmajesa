@@ -113,19 +113,20 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
 
         doc.setFontSize(7);
         doc.setFont('helvetica', 'bold');
-        doc.text('TATA TERTIB / KETERANGAN', xBack + 5, y + 8);
+        doc.text('TATA TERTIB/KETERANGAN', xBack + 5, y + 8);
         doc.setFont('helvetica', 'normal');
 
         // Render Tata Tertib dengan hanging indent
         let currentY = y + 12;
-        const ttLines = tataTertib.split('
-');
+        const ttLines = tataTertib.split('\n');
         const indent = 3.5; 
         const ttMaxWidth = 76;
+        let prevLineHadPrefix = false;
 
         ttLines.forEach(line => {
             if (!line.trim()) {
                 currentY += 1.5;
+                prevLineHadPrefix = false;
                 return;
             }
 
@@ -138,6 +139,11 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
                 const splitText = doc.splitTextToSize(text, ttMaxWidth - indent);
                 doc.text(splitText, xBack + 5 + indent, currentY);
                 currentY += (splitText.length * 3);
+                prevLineHadPrefix = true;
+            } else if (prevLineHadPrefix) {
+                const splitText = doc.splitTextToSize(line, ttMaxWidth - indent);
+                doc.text(splitText, xBack + 5 + indent, currentY);
+                currentY += (splitText.length * 3);
             } else {
                 const splitText = doc.splitTextToSize(line, ttMaxWidth);
                 doc.text(splitText, xBack + 5, currentY);
@@ -146,17 +152,18 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         });
 
         // TTD
-        doc.text(ttdDate, xBack + 62, y + 32, { align: 'center' });
-        doc.text('Kepala Sekolah,', xBack + 62, y + 36, { align: 'center' });
+        const ttdStart = Math.max(y + 30, currentY + 2);
+        doc.text(ttdDate, xBack + 62, ttdStart, { align: 'center' });
+        doc.text('Kepala Sekolah,', xBack + 62, ttdStart + 3, { align: 'center' });
 
         if (pengaturan.tanda_tangan) {
-            doc.addImage(pengaturan.tanda_tangan, xBack + 52, y + 38, 20, 8);
+            doc.addImage(pengaturan.tanda_tangan, xBack + 52, ttdStart + 4.5, 20, 7);
         }
 
         doc.setFont('helvetica', 'bold');
-        doc.text(headMaster, xBack + 62, y + 47, { align: 'center' });
+        doc.text(headMaster, xBack + 62, ttdStart + 12.5, { align: 'center' });
         doc.setFont('helvetica', 'normal');
-        doc.text(headNip, xBack + 62, y + 50, { align: 'center' });
+        doc.text(headNip, xBack + 62, ttdStart + 15, { align: 'center' });
     }
 
     doc.save('Kartu_Pelajar.pdf');
