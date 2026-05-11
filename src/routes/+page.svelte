@@ -20,7 +20,7 @@
 	<div class="w-full max-w-sm">
 		<div class="bg-white rounded-2xl shadow-2xl p-8">
 			<div class="text-center mb-8">
-				<img src="/assets/logo/logo.png" alt="Logo Sekolah" class="w-20 h-20 mx-auto mb-4 object-contain">
+				<img src="/assets/logo/logo.webp" alt="Logo Sekolah" class="w-20 h-20 mx-auto mb-4 object-contain">
 				<h1 class="text-xl font-bold text-cf-text">Kartu Pelajar</h1>
 				<p class="text-sm text-cf-muted mt-1">Masuk ke akun Anda</p>
 			</div>
