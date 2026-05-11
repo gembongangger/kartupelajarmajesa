@@ -72,7 +72,7 @@
 			>
 				<div class="flex items-start gap-4">
 					<div class="{card.color} w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0">
-						<card.icon size={22} />
+						<card.icon size={22} strokeWidth={1.5} />
 					</div>
 					<div>
 						<h3 class="font-semibold text-cf-text text-sm">{card.label}</h3>
@@ -90,7 +90,7 @@
 		>
 			<div class="flex items-start gap-4">
 				<div class="bg-cf-orange w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0">
-					<Printer size={22} />
+					<Printer size={22} strokeWidth={1.5} />
 				</div>
 				<div>
 					<h3 class="font-semibold text-cf-text text-sm">
@@ -104,7 +104,7 @@
 		<div class="p-5 bg-white rounded-xl border border-cf-border">
 			<div class="flex items-start gap-4">
 				<div class="bg-cf-danger w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0">
-					<TriangleAlert size={22} />
+					<TriangleAlert size={22} strokeWidth={1.5} />
 				</div>
 				<div class="flex-1">
 					<h3 class="font-semibold text-cf-text text-sm">Reset Database</h3>
@@ -126,7 +126,7 @@
 		>
 			<div class="flex items-start gap-4">
 				<div class="bg-gray-500 w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0">
-					<LogOut size={22} />
+					<LogOut size={22} strokeWidth={1.5} />
 				</div>
 				<div>
 					<h3 class="font-semibold text-cf-text text-sm">Logout</h3>

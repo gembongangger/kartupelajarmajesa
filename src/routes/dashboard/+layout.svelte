@@ -36,7 +36,7 @@
 		class="fixed inset-y-0 left-0 z-50 w-64 bg-cf-sidebar-bg border-r border-cf-border transform transition duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto flex flex-col {sidebarOpen ? 'translate-x-0' : '-translate-x-full'}"
 	>
 		<div class="flex items-center gap-3 px-5 h-16 border-b border-cf-border shrink-0">
-			<GraduationCap class="text-cf-orange shrink-0" size={26} />
+			<GraduationCap class="text-cf-orange shrink-0" size={26} strokeWidth={1.5} />
 			<span class="font-semibold text-cf-text text-lg">Kartu Pelajar</span>
 		</div>
 
@@ -46,7 +46,7 @@
 					href={item.href}
 					class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-cf-sidebar-hover hover:text-cf-text transition-colors {activePath === item.href ? 'bg-cf-sidebar-active/10 text-cf-orange' : 'text-cf-sidebar-text'}"
 				>
-					<item.icon class="shrink-0" size={20} />
+					<item.icon class="shrink-0" size={20} strokeWidth={1.5} />
 					{item.label}
 				</a>
 			{/each}
@@ -57,7 +57,7 @@
 				href="/logout"
 				class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-cf-sidebar-text hover:bg-cf-sidebar-hover hover:text-cf-text transition-colors"
 			>
-				<LogOut class="shrink-0" size={20} />
+				<LogOut class="shrink-0" size={20} strokeWidth={1.5} />
 				Logout
 			</a>
 		</div>
