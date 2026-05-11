@@ -4,7 +4,6 @@
 	let { data, form } = $props();
 
 	let pengaturan = $derived(data.pengaturan);
-	let logo_path = $derived(pengaturan?.has_logo ? '/pengaturan/gambar/logo' : null);
 
 	let submitting = $state(false);
 
@@ -21,13 +20,7 @@
 	<div class="w-full max-w-sm">
 		<div class="bg-white rounded-2xl shadow-2xl p-8">
 			<div class="text-center mb-8">
-				{#if logo_path}
-					<img src={logo_path} alt="Logo Sekolah" class="w-20 h-20 mx-auto mb-4 object-contain">
-				{:else}
-					<div class="w-20 h-20 mx-auto mb-4 bg-cf-orange/10 rounded-full flex items-center justify-center">
-						<span class="text-3xl">🎓</span>
-					</div>
-				{/if}
+				<img src="/assets/logo/logo.png" alt="Logo Sekolah" class="w-20 h-20 mx-auto mb-4 object-contain">
 				<h1 class="text-xl font-bold text-cf-text">Kartu Pelajar</h1>
 				<p class="text-sm text-cf-muted mt-1">Masuk ke akun Anda</p>
 			</div>

@@ -24,12 +24,16 @@
 		<div
 			class="fixed inset-0 z-40 bg-black/50 lg:hidden"
 			onclick={() => sidebarOpen = false}
+			onkeydown={(e) => e.key === 'Escape' && (sidebarOpen = false)}
+			role="button"
+			tabindex="0"
+			aria-label="Close sidebar"
 		></div>
 	{/if}
 
 	<!-- Sidebar -->
 	<aside
-		class="fixed inset-y-0 left-0 z-50 w-64 bg-cf-sidebar-bg transform transition duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto flex flex-col {sidebarOpen ? 'translate-x-0' : '-translate-x-full'}"
+		class="fixed inset-y-0 left-0 z-50 w-64 bg-cf-sidebar-bg border-r border-cf-border transform transition duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto flex flex-col {sidebarOpen ? 'translate-x-0' : '-translate-x-full'}"
 	>
 		<div class="flex items-center gap-3 px-5 h-16 border-b border-cf-border shrink-0">
 			<GraduationCap class="text-cf-orange shrink-0" size={26} />
@@ -48,7 +52,7 @@
 			{/each}
 		</nav>
 
-		<div class="px-3 pb-4 shrink-0">
+		<div class="px-3 pb-4 shrink-0 border-t border-cf-border pt-4">
 			<a
 				href="/logout"
 				class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-cf-sidebar-text hover:bg-cf-sidebar-hover hover:text-cf-text transition-colors"
@@ -66,6 +70,7 @@
 			<button
 				onclick={() => sidebarOpen = true}
 				class="p-2 -ml-2 rounded-lg hover:bg-gray-100 text-cf-text"
+				aria-label="Open sidebar"
 			>
 				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
