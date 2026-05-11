@@ -39,11 +39,11 @@
 	}
 
 	const menuCards = [
-		{ href: '/dashboard/upload-excel', label: 'Upload Data Siswa', desc: 'Import dari file Excel (.xls)', color: 'bg-emerald-600 hover:bg-emerald-700', icon: FileSpreadsheet },
-		{ href: '/dashboard/upload-foto', label: 'Upload Foto Siswa', desc: 'Upload & hapus background otomatis', color: 'bg-red-500 hover:bg-red-600', icon: Camera },
-		{ href: '/dashboard/pengaturan', label: 'Pengaturan Profil', desc: 'Sekolah, logo, background kartu', color: 'bg-blue-600 hover:bg-blue-700', icon: Settings },
-		{ href: '/dashboard/pilih-kelas', label: 'Cetak Per Kelas', desc: 'Cetak kartu berdasarkan kelas', color: 'bg-cyan-500 hover:bg-cyan-600', icon: Printer },
-		{ href: '/dashboard/siswa', label: 'Daftar Siswa', desc: 'Cari, edit, & cetak per siswa', color: 'bg-cf-dark hover:bg-cf-dark-hover', icon: Users },
+		{ href: '/dashboard/upload-excel', label: 'Upload Data Siswa', desc: 'Import dari file Excel (.xls)', color: 'text-emerald-600', icon: FileSpreadsheet },
+		{ href: '/dashboard/upload-foto', label: 'Upload Foto Siswa', desc: 'Upload & hapus background otomatis', color: 'text-red-500', icon: Camera },
+		{ href: '/dashboard/pengaturan', label: 'Pengaturan Profil', desc: 'Sekolah, logo, background kartu', color: 'text-blue-600', icon: Settings },
+		{ href: '/dashboard/pilih-kelas', label: 'Cetak Per Kelas', desc: 'Cetak kartu berdasarkan kelas', color: 'text-cyan-500', icon: Printer },
+		{ href: '/dashboard/siswa', label: 'Daftar Siswa', desc: 'Cari, edit, & cetak per siswa', color: 'text-cf-dark', icon: Users },
 	];
 </script>
 
@@ -71,7 +71,7 @@
 				class="block p-5 bg-white rounded-xl border border-cf-border hover:border-cf-orange/30 hover:shadow-md transition-all"
 			>
 				<div class="flex items-start gap-4">
-					<div class="{card.color} w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0">
+					<div class="{card.color} w-10 h-10 flex items-center justify-center shrink-0">
 						<card.icon size={22} strokeWidth={1.5} />
 					</div>
 					<div>
@@ -89,7 +89,7 @@
 			class="p-5 bg-white rounded-xl border border-cf-border hover:border-cf-orange/30 hover:shadow-md transition-all text-left cursor-pointer"
 		>
 			<div class="flex items-start gap-4">
-				<div class="bg-cf-orange w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0">
+				<div class="text-cf-orange w-10 h-10 flex items-center justify-center shrink-0">
 					<Printer size={22} strokeWidth={1.5} />
 				</div>
 				<div>
@@ -103,7 +103,7 @@
 
 		<div class="p-5 bg-white rounded-xl border border-cf-border">
 			<div class="flex items-start gap-4">
-				<div class="bg-cf-danger w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0">
+				<div class="text-cf-danger w-10 h-10 flex items-center justify-center shrink-0">
 					<TriangleAlert size={22} strokeWidth={1.5} />
 				</div>
 				<div class="flex-1">
@@ -125,7 +125,7 @@
 			class="p-5 bg-white rounded-xl border border-cf-border hover:border-cf-orange/30 hover:shadow-md transition-all"
 		>
 			<div class="flex items-start gap-4">
-				<div class="bg-gray-500 w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0">
+				<div class="text-gray-500 w-10 h-10 flex items-center justify-center shrink-0">
 					<LogOut size={22} strokeWidth={1.5} />
 				</div>
 				<div>
