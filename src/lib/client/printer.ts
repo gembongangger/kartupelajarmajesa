@@ -115,7 +115,35 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         doc.setFont('helvetica', 'bold');
         doc.text('TATA TERTIB / KETERANGAN', xBack + 5, y + 8);
         doc.setFont('helvetica', 'normal');
-        doc.text(tataTertib, xBack + 5, y + 12, { maxWidth: 74 });
+
+        // Render Tata Tertib dengan hanging indent
+        let currentY = y + 12;
+        const ttLines = tataTertib.split('
+');
+        const indent = 3.5; 
+        const ttMaxWidth = 76;
+
+        ttLines.forEach(line => {
+            if (!line.trim()) {
+                currentY += 1.5;
+                return;
+            }
+
+            const match = line.match(/^(\d+\. |• )/);
+            if (match) {
+                const prefix = match[0];
+                const text = line.substring(prefix.length);
+                doc.text(prefix, xBack + 5, currentY);
+
+                const splitText = doc.splitTextToSize(text, ttMaxWidth - indent);
+                doc.text(splitText, xBack + 5 + indent, currentY);
+                currentY += (splitText.length * 3);
+            } else {
+                const splitText = doc.splitTextToSize(line, ttMaxWidth);
+                doc.text(splitText, xBack + 5, currentY);
+                currentY += (splitText.length * 3);
+            }
+        });
 
         // TTD
         doc.text(ttdDate, xBack + 62, y + 32, { align: 'center' });
