@@ -107,7 +107,7 @@ export const actions: Actions = {
 		const tinggi_kartu = parseInt(data.get('tinggi_kartu')?.toString() || '56');
 		const margin_kiri = parseInt(data.get('margin_kiri')?.toString() || '10');
 		const margin_atas = parseInt(data.get('margin_atas')?.toString() || '10');
-		const spasi_kartu = parseInt(data.get('spasi_kartu')?.toString() || '60');
+		const spasi_kartu = parseInt(data.get('spasi_kartu')?.toString() || '4');
 		const gap_depan_belakang = parseInt(data.get('gap_depan_belakang')?.toString() || '4');
 
 		const args = [

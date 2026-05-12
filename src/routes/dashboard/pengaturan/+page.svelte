@@ -204,8 +204,8 @@
 						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
 				</div>
 				<div>
-					<label for="spasi_kartu" class="block text-sm font-medium text-cf-text mb-1">Jarak Antar Kartu (mm):</label>
-					<input type="number" name="spasi_kartu" id="spasi_kartu" value={pengaturan.spasi_kartu} min="1"
+					<label for="spasi_kartu" class="block text-sm font-medium text-cf-text mb-1">Gap Antar Kartu (mm):</label>
+					<input type="number" name="spasi_kartu" id="spasi_kartu" value={pengaturan.spasi_kartu} min="0"
 						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
 				</div>
 				<div>

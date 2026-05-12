@@ -54,7 +54,7 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
 
         const row = i % 4;
         const x = pengaturan.margin_kiri;
-        const y = pengaturan.margin_atas + (row * pengaturan.spasi_kartu);
+        const y = pengaturan.margin_atas + (row * (pengaturan.tinggi_kartu + pengaturan.spasi_kartu));
 
         // Front Card
         doc.rect(x, y, pengaturan.lebar_kartu, pengaturan.tinggi_kartu);
