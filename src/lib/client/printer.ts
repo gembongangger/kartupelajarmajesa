@@ -33,7 +33,10 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
 
     if (students.length === 0) return;
 
-    const doc = new jsPDF('p', 'mm', 'a4');
+    const paperSize = pengaturan.jenis_kertas === 'Custom'
+        ? [pengaturan.lebar_kertas, pengaturan.tinggi_kertas]
+        : pengaturan.jenis_kertas?.toLowerCase() || 'a4';
+    const doc = new jsPDF('p', 'mm', paperSize);
 
     const ttdDate = `Ditetapkan di: ${pengaturan.kota_ttd || '......'}, ${tanggalIndonesia(pengaturan.tanggal_ttd)}`;
     const tataTertib = (pengaturan.tata_tertib || `1. Kartu ini wajib dibawa setiap hari sekolah.\n2. Jika menemukan kartu ini, mohon dikembalikan ke:\n${pengaturan.nama_sekolah}\n${pengaturan.alamat}`)
@@ -50,15 +53,15 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         }
 
         const row = i % 4;
-        const x = 10;
-        const y = 10 + (row * 60);
+        const x = pengaturan.margin_kiri;
+        const y = pengaturan.margin_atas + (row * pengaturan.spasi_kartu);
 
         // Front Card
-        doc.rect(x, y, 86, 54);
+        doc.rect(x, y, pengaturan.lebar_kartu, pengaturan.tinggi_kartu);
         
         // Background Depan
         if (pengaturan.background) {
-            doc.addImage(pengaturan.background, x, y, 86, 54);
+            doc.addImage(pengaturan.background, x, y, pengaturan.lebar_kartu, pengaturan.tinggi_kartu);
         }
 
         // Foto Siswa
@@ -101,14 +104,14 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         if (barcodeDataURL) {
             doc.addImage(barcodeDataURL, x + 13, y + 38, 60, 8);
         }
-        doc.text(student.nisn, x + 43, y + 49, { align: 'center' });
+        doc.text(student.nisn, x + pengaturan.lebar_kartu / 2, y + 49, { align: 'center' });
 
         // Back Card
-        const xBack = x + 90;
-        doc.rect(xBack, y, 86, 54);
+        const xBack = x + pengaturan.lebar_kartu + pengaturan.gap_depan_belakang;
+        doc.rect(xBack, y, pengaturan.lebar_kartu, pengaturan.tinggi_kartu);
         
         if (pengaturan.background_belakang) {
-            doc.addImage(pengaturan.background_belakang, xBack, y, 86, 54);
+            doc.addImage(pengaturan.background_belakang, xBack, y, pengaturan.lebar_kartu, pengaturan.tinggi_kartu);
         }
 
         doc.setFontSize(7);
@@ -120,7 +123,7 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         let currentY = y + 12;
         const ttLines = tataTertib.split('\n');
         const indent = 3.5; 
-        const ttMaxWidth = 76;
+        const ttMaxWidth = pengaturan.lebar_kartu - 10;
         let prevLineHadPrefix = false;
 
         ttLines.forEach(line => {
@@ -152,18 +155,19 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         });
 
         // TTD
+        const centerX = xBack + pengaturan.lebar_kartu / 2;
         const ttdStart = Math.max(y + 30, currentY + 2);
-        doc.text(ttdDate, xBack + 62, ttdStart, { align: 'center' });
-        doc.text('Kepala Sekolah,', xBack + 62, ttdStart + 3, { align: 'center' });
+        doc.text(ttdDate, centerX, ttdStart, { align: 'center' });
+        doc.text('Kepala Sekolah,', centerX, ttdStart + 3, { align: 'center' });
 
         if (pengaturan.tanda_tangan) {
-            doc.addImage(pengaturan.tanda_tangan, xBack + 52, ttdStart + 4.5, 20, 7);
+            doc.addImage(pengaturan.tanda_tangan, centerX - 10, ttdStart + 4.5, 20, 7);
         }
 
         doc.setFont('helvetica', 'bold');
-        doc.text(headMaster, xBack + 62, ttdStart + 12.5, { align: 'center' });
+        doc.text(headMaster, centerX, ttdStart + 12.5, { align: 'center' });
         doc.setFont('helvetica', 'normal');
-        doc.text(headNip, xBack + 62, ttdStart + 15, { align: 'center' });
+        doc.text(headNip, centerX, ttdStart + 15, { align: 'center' });
     }
 
     doc.save('Kartu_Pelajar.pdf');

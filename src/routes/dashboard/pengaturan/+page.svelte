@@ -33,6 +33,8 @@
 		}
 	}
 
+	let jenisKertas = $state(data.pengaturan.jenis_kertas || 'A4');
+
 	let kelasText = $state('');
 	let submittingKelas = $state(false);
 
@@ -151,6 +153,66 @@
 				{#if bg2Preview}
 					<img src={bg2Preview} alt="Background Belakang" class="mt-2 max-w-[200px] h-auto border border-cf-border rounded-lg">
 				{/if}
+			</div>
+
+			<hr class="border-cf-border my-6">
+
+			<h2 class="text-lg font-semibold text-cf-text mb-4">Ukuran Kartu & Kertas</h2>
+			<div>
+				<label for="jenis_kertas" class="block text-sm font-medium text-cf-text mb-1">Jenis Kertas:</label>
+				<select name="jenis_kertas" id="jenis_kertas" bind:value={jenisKertas}
+					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+					<option value="A4">A4 (210 x 297 mm)</option>
+					<option value="A3">A3 (297 x 420 mm)</option>
+					<option value="Letter">Letter (216 x 279 mm)</option>
+					<option value="Custom">Kustom</option>
+				</select>
+			</div>
+			{#if jenisKertas === 'Custom'}
+				<div class="grid grid-cols-2 gap-4">
+					<div>
+						<label for="lebar_kertas" class="block text-sm font-medium text-cf-text mb-1">Lebar Kertas (mm):</label>
+						<input type="number" name="lebar_kertas" id="lebar_kertas" value={pengaturan.lebar_kertas} min="1"
+							class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+					</div>
+					<div>
+						<label for="tinggi_kertas" class="block text-sm font-medium text-cf-text mb-1">Tinggi Kertas (mm):</label>
+						<input type="number" name="tinggi_kertas" id="tinggi_kertas" value={pengaturan.tinggi_kertas} min="1"
+							class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+					</div>
+				</div>
+			{/if}
+			<div class="grid grid-cols-2 gap-4">
+				<div>
+					<label for="lebar_kartu" class="block text-sm font-medium text-cf-text mb-1">Lebar Kartu (mm):</label>
+					<input type="number" name="lebar_kartu" id="lebar_kartu" value={pengaturan.lebar_kartu} min="1"
+						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+				</div>
+				<div>
+					<label for="tinggi_kartu" class="block text-sm font-medium text-cf-text mb-1">Tinggi Kartu (mm):</label>
+					<input type="number" name="tinggi_kartu" id="tinggi_kartu" value={pengaturan.tinggi_kartu} min="1"
+						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+				</div>
+				<div>
+					<label for="margin_kiri" class="block text-sm font-medium text-cf-text mb-1">Margin Kiri (mm):</label>
+					<input type="number" name="margin_kiri" id="margin_kiri" value={pengaturan.margin_kiri} min="0"
+						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+				</div>
+				<div>
+					<label for="margin_atas" class="block text-sm font-medium text-cf-text mb-1">Margin Atas (mm):</label>
+					<input type="number" name="margin_atas" id="margin_atas" value={pengaturan.margin_atas} min="0"
+						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+				</div>
+				<div>
+					<label for="spasi_kartu" class="block text-sm font-medium text-cf-text mb-1">Jarak Antar Kartu (mm):</label>
+					<input type="number" name="spasi_kartu" id="spasi_kartu" value={pengaturan.spasi_kartu} min="1"
+						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+				</div>
+				<div>
+					<label for="gap_depan_belakang" class="block text-sm font-medium text-cf-text mb-1">Gap Depan-Belakang (mm):</label>
+					<input type="number" name="gap_depan_belakang" id="gap_depan_belakang" value={pengaturan.gap_depan_belakang} min="0"
+						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+				</div>
 			</div>
 
 			<hr class="border-cf-border my-6">

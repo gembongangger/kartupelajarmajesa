@@ -26,7 +26,16 @@ async function initDb() {
 				background BLOB,
 				background_mime TEXT,
 				background_belakang BLOB,
-				background_belakang_mime TEXT
+				background_belakang_mime TEXT,
+				jenis_kertas TEXT DEFAULT 'A4',
+				lebar_kertas INTEGER DEFAULT 210,
+				tinggi_kertas INTEGER DEFAULT 297,
+				lebar_kartu INTEGER DEFAULT 86,
+				tinggi_kartu INTEGER DEFAULT 56,
+				margin_kiri INTEGER DEFAULT 10,
+				margin_atas INTEGER DEFAULT 10,
+				spasi_kartu INTEGER DEFAULT 60,
+				gap_depan_belakang INTEGER DEFAULT 4
 			);
 			CREATE TABLE IF NOT EXISTS users (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,12 +61,24 @@ async function initDb() {
 			);
 		`);
 
+		try { await db.execute("ALTER TABLE pengaturan ADD COLUMN jenis_kertas TEXT DEFAULT 'A4'"); } catch { }
+		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN lebar_kertas INTEGER DEFAULT 210'); } catch { }
+		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN tinggi_kertas INTEGER DEFAULT 297'); } catch { }
+		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN lebar_kartu INTEGER DEFAULT 86'); } catch { }
+		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN tinggi_kartu INTEGER DEFAULT 56'); } catch { }
+		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN margin_kiri INTEGER DEFAULT 10'); } catch { }
+		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN margin_atas INTEGER DEFAULT 10'); } catch { }
+		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN spasi_kartu INTEGER DEFAULT 60'); } catch { }
+		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN gap_depan_belakang INTEGER DEFAULT 4'); } catch { }
+
 		const pengaturanCheck = await db.execute('SELECT COUNT(*) as cnt FROM pengaturan');
 		if (Number(pengaturanCheck.rows[0]?.cnt) === 0) {
 			await db.execute(
-				`INSERT INTO pengaturan (id, nama_sekolah, alamat, kepala_sekolah, nip_kepala_sekolah, tanggal_ttd)
+				`INSERT INTO pengaturan (id, nama_sekolah, alamat, kepala_sekolah, nip_kepala_sekolah, tanggal_ttd,
+					jenis_kertas, lebar_kertas, tinggi_kertas, lebar_kartu, tinggi_kartu, margin_kiri, margin_atas, spasi_kartu, gap_depan_belakang)
 				VALUES (1, 'SD NEGERI BERMUTU', 'Jalan Kebagusan, RT.27 RW.05 Kelurahan Sumberberkah, Kec. Gemahripah',
-				'Nir Singgih Purwantio, S.Pd.', '198705092021021004', '2025-07-14')`
+				'Nir Singgih Purwantio, S.Pd.', '198705092021021004', '2025-07-14',
+				'A4', 210, 297, 86, 56, 10, 10, 60, 4)`
 			);
 		}
 

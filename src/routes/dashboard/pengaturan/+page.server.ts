@@ -21,6 +21,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 			tanggal_ttd,
 			tata_tertib,
 			kota_ttd,
+			jenis_kertas,
+			lebar_kertas,
+			tinggi_kertas,
+			lebar_kartu,
+			tinggi_kartu,
+			margin_kiri,
+			margin_atas,
+			spasi_kartu,
+			gap_depan_belakang,
 			logo IS NOT NULL AS has_logo,
 			tanda_tangan IS NOT NULL AS has_tanda_tangan,
 			background IS NOT NULL AS has_background,
@@ -91,6 +100,15 @@ export const actions: Actions = {
 
 		const tata_tertib = data.get('tata_tertib');
 		const kota_ttd = data.get('kota_ttd');
+		const jenis_kertas = data.get('jenis_kertas')?.toString() || 'A4';
+		const lebar_kertas = parseInt(data.get('lebar_kertas')?.toString() || '210');
+		const tinggi_kertas = parseInt(data.get('tinggi_kertas')?.toString() || '297');
+		const lebar_kartu = parseInt(data.get('lebar_kartu')?.toString() || '86');
+		const tinggi_kartu = parseInt(data.get('tinggi_kartu')?.toString() || '56');
+		const margin_kiri = parseInt(data.get('margin_kiri')?.toString() || '10');
+		const margin_atas = parseInt(data.get('margin_atas')?.toString() || '10');
+		const spasi_kartu = parseInt(data.get('spasi_kartu')?.toString() || '60');
+		const gap_depan_belakang = parseInt(data.get('gap_depan_belakang')?.toString() || '4');
 
 		const args = [
 			nama?.toString(),
@@ -100,6 +118,15 @@ export const actions: Actions = {
 			tanggal?.toString(),
 			tata_tertib?.toString(),
 			kota_ttd?.toString(),
+			jenis_kertas,
+			lebar_kertas,
+			tinggi_kertas,
+			lebar_kartu,
+			tinggi_kartu,
+			margin_kiri,
+			margin_atas,
+			spasi_kartu,
+			gap_depan_belakang,
 			newLogo?.blob ?? null,
 			newLogo?.mime ?? null,
 			newTtd?.blob ?? null,
@@ -120,6 +147,15 @@ export const actions: Actions = {
 					tanggal_ttd = ?,
 					tata_tertib = ?,
 					kota_ttd = ?,
+					jenis_kertas = ?,
+					lebar_kertas = ?,
+					tinggi_kertas = ?,
+					lebar_kartu = ?,
+					tinggi_kartu = ?,
+					margin_kiri = ?,
+					margin_atas = ?,
+					spasi_kartu = ?,
+					gap_depan_belakang = ?,
 					logo = COALESCE(?, logo),
 					logo_mime = COALESCE(?, logo_mime),
 					tanda_tangan = COALESCE(?, tanda_tangan),
