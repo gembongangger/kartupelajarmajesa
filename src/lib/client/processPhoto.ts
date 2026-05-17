@@ -29,7 +29,7 @@ type ForegroundMask = {
 const OUTPUT_WIDTH = 360;
 const OUTPUT_HEIGHT = 440;
 const WORKING_RESIZE_WIDTH = 900;
-const FACE_HEIGHT_RATIO = 0.28;
+const FACE_HEIGHT_RATIO = 0.24;
 const FACE_CENTER_Y_RATIO = 0.5;
 const PERSON_MIN_MARGIN_X = 26;
 const PERSON_MIN_MARGIN_TOP = 18;
@@ -211,6 +211,42 @@ function drawCropWithPadding(
 	);
 }
 
+function drawCropToCanvas(
+	ctx: CanvasRenderingContext2D,
+	image: ImageBitmap,
+	crop: CropBox,
+	targetWidth: number,
+	targetHeight: number
+) {
+	const sourceX = clamp(crop.x, 0, image.width);
+	const sourceY = clamp(crop.y, 0, image.height);
+	const sourceRight = clamp(crop.x + crop.width, 0, image.width);
+	const sourceBottom = clamp(crop.y + crop.height, 0, image.height);
+	const sourceWidth = sourceRight - sourceX;
+	const sourceHeight = sourceBottom - sourceY;
+
+	if (sourceWidth <= 0 || sourceHeight <= 0) return;
+
+	const scaleX = targetWidth / crop.width;
+	const scaleY = targetHeight / crop.height;
+	const destX = (sourceX - crop.x) * scaleX;
+	const destY = (sourceY - crop.y) * scaleY;
+	const destWidth = sourceWidth * scaleX;
+	const destHeight = sourceHeight * scaleY;
+
+	ctx.drawImage(
+		image,
+		sourceX,
+		sourceY,
+		sourceWidth,
+		sourceHeight,
+		destX,
+		destY,
+		destWidth,
+		destHeight
+	);
+}
+
 function drawPreparedCrop(
 	ctx: CanvasRenderingContext2D,
 	image: ImageBitmap,
@@ -226,6 +262,69 @@ function drawPreparedCrop(
 function smoothstep(edge0: number, edge1: number, value: number) {
 	const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
 	return t * t * (3 - 2 * t);
+}
+
+function cleanEdgePixels(imageData: ImageData): void {
+	const d = imageData.data;
+	const w = imageData.width;
+	const h = imageData.height;
+	const copy = new Uint8ClampedArray(d);
+
+	for (let y = 0; y < h; y++) {
+		for (let x = 0; x < w; x++) {
+			const i = (y * w + x) * 4;
+			if (d[i + 3] === 0) continue;
+
+			let onEdge = false;
+			for (let oy = -1; oy <= 1 && !onEdge; oy++) {
+				for (let ox = -1; ox <= 1 && !onEdge; ox++) {
+					if (ox === 0 && oy === 0) continue;
+					const nx = x + ox, ny = y + oy;
+					if (nx < 0 || ny < 0 || nx >= w || ny >= h) { onEdge = true; break; }
+					if (copy[((ny * w + nx) * 4) + 3] === 0) onEdge = true;
+				}
+			}
+			if (!onEdge) continue;
+
+			const rs: number[] = [];
+			const gs: number[] = [];
+			const bs: number[] = [];
+
+			for (let oy = -2; oy <= 2; oy++) {
+				for (let ox = -2; ox <= 2; ox++) {
+					const nx = x + ox, ny = y + oy;
+					if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+					const ni = (ny * w + nx) * 4;
+					if (copy[ni + 3] < 255) continue;
+
+					let interior = true;
+					for (let noy = -1; noy <= 1 && interior; noy++) {
+						for (let nox = -1; nox <= 1 && interior; nox++) {
+							if (nox === 0 && noy === 0) continue;
+							const nnx = nx + nox, nny = ny + noy;
+							if (nnx < 0 || nny < 0 || nnx >= w || nny >= h) continue;
+							if (copy[((nny * w + nnx) * 4) + 3] === 0) interior = false;
+						}
+					}
+					if (interior) {
+						rs.push(copy[ni]);
+						gs.push(copy[ni + 1]);
+						bs.push(copy[ni + 2]);
+					}
+				}
+			}
+
+			if (rs.length > 0) {
+				rs.sort((a, b) => a - b);
+				gs.sort((a, b) => a - b);
+				bs.sort((a, b) => a - b);
+				const mid = Math.floor(rs.length / 2);
+				d[i] = rs[mid];
+				d[i + 1] = gs[mid];
+				d[i + 2] = bs[mid];
+			}
+		}
+	}
 }
 
 function erodeAlpha(alpha: Uint8ClampedArray, width: number, height: number) {
@@ -251,6 +350,93 @@ function erodeAlpha(alpha: Uint8ClampedArray, width: number, height: number) {
 	}
 
 	return output;
+}
+
+function dilateAlpha(alpha: Uint8ClampedArray, width: number, height: number) {
+	const output = new Uint8ClampedArray(alpha.length);
+
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			const index = y * width + x;
+			let maxAlpha = alpha[index];
+
+			for (let oy = -1; oy <= 1; oy++) {
+				for (let ox = -1; ox <= 1; ox++) {
+					const nx = x + ox;
+					const ny = y + oy;
+
+					if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+					maxAlpha = Math.max(maxAlpha, alpha[ny * width + nx]);
+				}
+			}
+
+			output[index] = maxAlpha;
+		}
+	}
+
+	return output;
+}
+
+function closeAlpha(alpha: Uint8ClampedArray, width: number, height: number) {
+	return erodeAlpha(dilateAlpha(alpha, width, height), width, height);
+}
+
+function fillAlphaHoles(alpha: Uint8ClampedArray, width: number, height: number) {
+	const visited = new Uint8Array(alpha.length);
+	const queue: number[] = [];
+	const threshold = 128;
+
+	for (let x = 0; x < width; x++) {
+		const topIndex = x;
+		const bottomIndex = (height - 1) * width + x;
+		if (alpha[topIndex] < threshold) {
+			visited[topIndex] = 1;
+			queue.push(topIndex);
+		}
+		if (alpha[bottomIndex] < threshold) {
+			visited[bottomIndex] = 1;
+			queue.push(bottomIndex);
+		}
+	}
+
+	for (let y = 0; y < height; y++) {
+		const leftIndex = y * width;
+		const rightIndex = y * width + (width - 1);
+		if (alpha[leftIndex] < threshold) {
+			visited[leftIndex] = 1;
+			queue.push(leftIndex);
+		}
+		if (alpha[rightIndex] < threshold) {
+			visited[rightIndex] = 1;
+			queue.push(rightIndex);
+		}
+	}
+
+	while (queue.length > 0) {
+		const index = queue.shift()!;
+		const x = index % width;
+		const y = Math.floor(index / width);
+
+		for (let oy = -1; oy <= 1; oy++) {
+			for (let ox = -1; ox <= 1; ox++) {
+				if (ox === 0 && oy === 0) continue;
+				const nx = x + ox;
+				const ny = y + oy;
+				if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+				const nIndex = ny * width + nx;
+				if (!visited[nIndex] && alpha[nIndex] < threshold) {
+					visited[nIndex] = 1;
+					queue.push(nIndex);
+				}
+			}
+		}
+	}
+
+	for (let i = 0; i < alpha.length; i++) {
+		if (!visited[i] && alpha[i] < threshold) {
+			alpha[i] = 255;
+		}
+	}
 }
 
 function getAlphaBounds(alpha: Uint8ClampedArray, width: number, height: number): MaskBounds | null {
@@ -293,12 +479,10 @@ function adjustCropForPersonBounds(crop: CropBox, bounds: MaskBounds | null, ima
 		} else {
 			const shortageBottom = PERSON_MIN_MARGIN_BOTTOM - bottomMargin;
 			const shortageTop = PERSON_MIN_MARGIN_TOP - topMargin;
-			const growRatio = 1 + Math.min(0.30, (shortageBottom + shortageTop) / OUTPUT_HEIGHT);
-			const centerX = crop.x + crop.width / 2;
-			const centerY = crop.y + crop.height / 2;
+			const growRatio = 1 + Math.min(0.35, (shortageBottom + shortageTop) / OUTPUT_HEIGHT);
 			const outputRatio = OUTPUT_WIDTH / OUTPUT_HEIGHT;
 
-			nextCrop.height = Math.min(crop.height * growRatio, image.height);
+			nextCrop.height = Math.min(crop.height * growRatio, image.height - crop.y);
 			nextCrop.width = nextCrop.height * outputRatio;
 
 			if (nextCrop.width > image.width) {
@@ -306,15 +490,16 @@ function adjustCropForPersonBounds(crop: CropBox, bounds: MaskBounds | null, ima
 				nextCrop.height = nextCrop.width / outputRatio;
 			}
 
-			nextCrop.x = centerX - nextCrop.width / 2;
-			nextCrop.y = centerY - nextCrop.height / 2;
+			const centerX = crop.x + crop.width / 2;
+			nextCrop.x = clamp(centerX - nextCrop.width / 2, 0, Math.max(0, image.width - nextCrop.width));
+			nextCrop.y = crop.y;
 			changed = true;
 		}
 	}
 
 	if (leftMargin < PERSON_MIN_MARGIN_X || rightMargin < PERSON_MIN_MARGIN_X) {
 		const shortageX = Math.max(PERSON_MIN_MARGIN_X - leftMargin, PERSON_MIN_MARGIN_X - rightMargin, 0);
-		const growRatio = 1 + Math.min(0.30, shortageX / OUTPUT_WIDTH);
+		const growRatio = 1 + Math.min(0.35, shortageX / OUTPUT_WIDTH);
 		const centerX = crop.x + crop.width / 2;
 		const centerY = crop.y + crop.height / 2;
 		const outputRatio = OUTPUT_WIDTH / OUTPUT_HEIGHT;
@@ -327,7 +512,7 @@ function adjustCropForPersonBounds(crop: CropBox, bounds: MaskBounds | null, ima
 			nextCrop.height = nextCrop.width / outputRatio;
 		}
 
-		nextCrop.x = centerX - nextCrop.width / 2;
+		nextCrop.x = clamp(centerX - nextCrop.width / 2, 0, Math.max(0, image.width - nextCrop.width));
 		nextCrop.y = centerY - nextCrop.height / 2;
 		changed = true;
 	}
@@ -348,13 +533,11 @@ async function createForegroundMask(image: HTMLCanvasElement): Promise<Foregroun
 		throw new Error('Mask segmentasi orang tidak tersedia');
 	}
 
-	const width = confidenceMask?.width ?? categoryMask!.width;
-	const height = confidenceMask?.height ?? categoryMask!.height;
+	const sw = confidenceMask?.width ?? categoryMask!.width;
+	const sh = confidenceMask?.height ?? categoryMask!.height;
 	const confidence = confidenceMask?.getAsFloat32Array();
 	const category = confidence ? null : categoryMask!.getAsUint8Array();
-	const alphaMap = new Uint8ClampedArray(width * height);
-	const maskData = new ImageData(width, height);
-	const data = maskData.data;
+	const alphaMap = new Uint8ClampedArray(sw * sh);
 
 	for (let i = 0; i < alphaMap.length; i++) {
 		alphaMap[i] = confidence
@@ -362,25 +545,62 @@ async function createForegroundMask(image: HTMLCanvasElement): Promise<Foregroun
 			: category![i] === 1 ? 255 : 0;
 	}
 
-	const cleanedAlpha = erodeAlpha(alphaMap, width, height);
-	const bounds = getAlphaBounds(cleanedAlpha, width, height);
+	let cleanedAlpha = erodeAlpha(alphaMap, sw, sh);
+	cleanedAlpha = closeAlpha(cleanedAlpha, sw, sh);
+	fillAlphaHoles(cleanedAlpha, sw, sh);
 
-	for (let i = 0; i < data.length; i += 4) {
-		const maskIndex = i / 4;
-		data[i] = 255;
-		data[i + 1] = 255;
-		data[i + 2] = 255;
-		data[i + 3] = cleanedAlpha[maskIndex];
+	for (let i = 0; i < cleanedAlpha.length; i++) {
+		cleanedAlpha[i] = clamp(cleanedAlpha[i], 0, 255);
 	}
 
-	const maskCanvas = document.createElement('canvas');
-	maskCanvas.width = width;
-	maskCanvas.height = height;
-	maskCanvas.getContext('2d')!.putImageData(maskData, 0, 0);
+	const srcBounds = getAlphaBounds(cleanedAlpha, sw, sh);
+
+	const iw = image.width;
+	const ih = image.height;
+
+	const scaledCanvas = document.createElement('canvas');
+	scaledCanvas.width = iw;
+	scaledCanvas.height = ih;
+	const scaledCtx = scaledCanvas.getContext('2d')!;
+	scaledCtx.imageSmoothingEnabled = false;
+
+	const srcCanvas = document.createElement('canvas');
+	srcCanvas.width = sw;
+	srcCanvas.height = sh;
+	const srcCtx = srcCanvas.getContext('2d')!;
+	const srcData = new ImageData(sw, sh);
+	const sd = srcData.data;
+	for (let i = 0; i < sd.length; i += 4) {
+		const maskIndex = i / 4;
+		sd[i] = 255;
+		sd[i + 1] = 255;
+		sd[i + 2] = 255;
+		sd[i + 3] = cleanedAlpha[maskIndex];
+	}
+	srcCtx.putImageData(srcData, 0, 0);
+	scaledCtx.drawImage(srcCanvas, 0, 0, iw, ih);
+
+	const scaledData = scaledCtx.getImageData(0, 0, iw, ih);
+	const dd = scaledData.data;
+	for (let i = 3; i < dd.length; i += 4) {
+		dd[i] = clamp(dd[i], 0, 255);
+	}
+	scaledCtx.putImageData(scaledData, 0, 0);
+
 	confidenceMask?.close?.();
 	categoryMask?.close?.();
 
-	return { canvas: maskCanvas, bounds };
+	let bounds: MaskBounds | null = null;
+	if (srcBounds) {
+		bounds = {
+			left: Math.round(srcBounds.left * iw / sw),
+			top: Math.round(srcBounds.top * ih / sh),
+			right: Math.round(srcBounds.right * iw / sw),
+			bottom: Math.round(srcBounds.bottom * ih / sh)
+		};
+	}
+
+	return { canvas: scaledCanvas, bounds };
 }
 
 export async function replaceBackground(
@@ -417,28 +637,45 @@ export async function replaceBackground(
 		mask = await createForegroundMask(cropCanvas);
 	}
 
+	const HR = 2;
+	const HR_W = OUTPUT_WIDTH * HR;
+	const HR_H = OUTPUT_HEIGHT * HR;
+
+	const hrCanvas = document.createElement('canvas');
+	hrCanvas.width = HR_W;
+	hrCanvas.height = HR_H;
+	const hrCtx = hrCanvas.getContext('2d')!;
+	hrCtx.fillStyle = '#000000';
+	hrCtx.fillRect(0, 0, HR_W, HR_H);
+	hrCtx.imageSmoothingEnabled = true;
+	hrCtx.imageSmoothingQuality = 'high';
+	drawCropToCanvas(hrCtx, workingImg, crop, HR_W, HR_H);
+
 	workingImg.close();
-	const foregroundCanvas = document.createElement('canvas');
-	foregroundCanvas.width = OUTPUT_WIDTH;
-	foregroundCanvas.height = OUTPUT_HEIGHT;
-	const foregroundCtx = foregroundCanvas.getContext('2d')!;
-	foregroundCtx.drawImage(cropCanvas, 0, 0);
-	foregroundCtx.globalCompositeOperation = 'destination-in';
-	foregroundCtx.drawImage(mask.canvas, 0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
+
+	const hrMask = await createForegroundMask(hrCanvas);
+
+	hrCtx.globalCompositeOperation = 'destination-in';
+	hrCtx.drawImage(hrMask.canvas, 0, 0, HR_W, HR_H);
+
+	const hrImageData = hrCtx.getImageData(0, 0, HR_W, HR_H);
+	cleanEdgePixels(hrImageData);
+	hrCtx.putImageData(hrImageData, 0, 0);
 
 	const outputCanvas = document.createElement('canvas');
 	outputCanvas.width = OUTPUT_WIDTH;
 	outputCanvas.height = OUTPUT_HEIGHT;
 	const outputCtx = outputCanvas.getContext('2d')!;
+	outputCtx.imageSmoothingEnabled = true;
+	outputCtx.imageSmoothingQuality = 'high';
 	outputCtx.fillStyle = bgColor;
 	outputCtx.fillRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
-	outputCtx.drawImage(foregroundCanvas, 0, 0);
+	outputCtx.drawImage(hrCanvas, 0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
 
 	return new Promise((resolve) => {
 		outputCanvas.toBlob(
 			(blob) => resolve(blob!),
-			'image/jpeg',
-			0.85
+			'image/png'
 		);
 	});
 }
