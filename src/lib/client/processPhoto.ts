@@ -285,10 +285,29 @@ function adjustCropForPersonBounds(crop: CropBox, bounds: MaskBounds | null, ima
 	let nextCrop = { ...crop };
 	let changed = false;
 
-	if (bottomMargin < PERSON_MIN_MARGIN_BOTTOM && topMargin > PERSON_MIN_MARGIN_TOP) {
-		const shiftDown = Math.min(PERSON_MIN_MARGIN_BOTTOM - bottomMargin, topMargin - PERSON_MIN_MARGIN_TOP);
-		nextCrop.y += shiftDown * sourcePerPixelY;
-		changed = true;
+	if (bottomMargin < PERSON_MIN_MARGIN_BOTTOM) {
+		if (topMargin > PERSON_MIN_MARGIN_TOP) {
+			const shiftDown = Math.min(PERSON_MIN_MARGIN_BOTTOM - bottomMargin, topMargin - PERSON_MIN_MARGIN_TOP);
+			nextCrop.y += shiftDown * sourcePerPixelY;
+			changed = true;
+		} else {
+			const growRatio = 1 + Math.min(0.18, (PERSON_MIN_MARGIN_BOTTOM - bottomMargin) / OUTPUT_HEIGHT);
+			const centerX = crop.x + crop.width / 2;
+			const centerY = crop.y + crop.height / 2;
+			const outputRatio = OUTPUT_WIDTH / OUTPUT_HEIGHT;
+
+			nextCrop.height = Math.min(crop.height * growRatio, image.height);
+			nextCrop.width = nextCrop.height * outputRatio;
+
+			if (nextCrop.width > image.width) {
+				nextCrop.width = image.width;
+				nextCrop.height = nextCrop.width / outputRatio;
+			}
+
+			nextCrop.x = centerX - nextCrop.width / 2;
+			nextCrop.y = centerY - nextCrop.height / 2;
+			changed = true;
+		}
 	}
 
 	if (leftMargin < PERSON_MIN_MARGIN_X || rightMargin < PERSON_MIN_MARGIN_X) {
@@ -339,20 +358,19 @@ async function createForegroundMask(image: HTMLCanvasElement): Promise<Foregroun
 	const data = maskData.data;
 
 	for (let i = 0; i < alphaMap.length; i++) {
-		alphaMap[i] = confidence
-			? smoothstep(0.38, 0.72, confidence[i]) * 255
-			: category![i] === 1 ? 255 : 0;
+	alphaMap[i] = confidence
+		? smoothstep(0.15, 0.50, confidence[i]) * 255
+		: category![i] === 1 ? 255 : 0;
 	}
 
-	const cleanedAlpha = erodeAlpha(alphaMap, width, height);
-	const bounds = getAlphaBounds(cleanedAlpha, width, height);
+	const bounds = getAlphaBounds(alphaMap, width, height);
 
 	for (let i = 0; i < data.length; i += 4) {
 		const maskIndex = i / 4;
 		data[i] = 255;
 		data[i + 1] = 255;
 		data[i + 2] = 255;
-		data[i + 3] = cleanedAlpha[maskIndex];
+		data[i + 3] = alphaMap[maskIndex];
 	}
 
 	const maskCanvas = document.createElement('canvas');
