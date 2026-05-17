@@ -194,6 +194,31 @@ function smoothstep(edge0: number, edge1: number, value: number) {
 	return t * t * (3 - 2 * t);
 }
 
+function erodeAlpha(alpha: Uint8ClampedArray, width: number, height: number) {
+	const output = new Uint8ClampedArray(alpha.length);
+
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			const index = y * width + x;
+			let minAlpha = alpha[index];
+
+			for (let oy = -1; oy <= 1; oy++) {
+				for (let ox = -1; ox <= 1; ox++) {
+					const nx = x + ox;
+					const ny = y + oy;
+
+					if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+					minAlpha = Math.min(minAlpha, alpha[ny * width + nx]);
+				}
+			}
+
+			output[index] = minAlpha;
+		}
+	}
+
+	return output;
+}
+
 async function createForegroundMask(image: HTMLCanvasElement) {
 	const segmenter = await getImageSegmenter();
 	const result = segmenter.segment(image);
@@ -208,19 +233,24 @@ async function createForegroundMask(image: HTMLCanvasElement) {
 	const height = confidenceMask?.height ?? categoryMask.height;
 	const confidence = confidenceMask?.getAsFloat32Array();
 	const category = confidence ? null : categoryMask.getAsUint8Array();
+	const alphaMap = new Uint8ClampedArray(width * height);
 	const maskData = new ImageData(width, height);
 	const data = maskData.data;
 
+	for (let i = 0; i < alphaMap.length; i++) {
+		alphaMap[i] = confidence
+			? smoothstep(0.38, 0.72, confidence[i]) * 255
+			: category![i] === 1 ? 255 : 0;
+	}
+
+	const cleanedAlpha = erodeAlpha(alphaMap, width, height);
+
 	for (let i = 0; i < data.length; i += 4) {
 		const maskIndex = i / 4;
-		const alpha = confidence
-			? smoothstep(0.28, 0.58, confidence[maskIndex]) * 255
-			: category![maskIndex] === 1 ? 255 : 0;
-
 		data[i] = 255;
 		data[i + 1] = 255;
 		data[i + 2] = 255;
-		data[i + 3] = alpha;
+		data[i + 3] = cleanedAlpha[maskIndex];
 	}
 
 	const maskCanvas = document.createElement('canvas');
