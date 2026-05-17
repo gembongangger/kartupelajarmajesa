@@ -105,11 +105,7 @@
 					<div class="h-full bg-cf-orange rounded-full transition-all duration-300" style="width: {progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%"></div>
 				</div>
 				<p class="text-xs text-cf-muted text-center mt-2">
-					{#if modelLoad && progress.current === 1}
-						⏳ Mendownload model AI (40MB, hanya sekali)...
-					{:else}
-						✂️ Memproses foto {progress.current}/{progress.total}
-					{/if}
+					Memproses foto {progress.current}/{progress.total} (Smart Crop & BG)
 				</p>
 			</div>
 		{/if}

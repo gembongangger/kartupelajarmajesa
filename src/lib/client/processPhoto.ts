@@ -1,9 +1,5 @@
 import { browser } from '$app/environment';
 
-let segmenter: any = null;
-let loadPromise: Promise<void> | null = null;
-let _isLoading = false;
-
 export function supportsMediaPipe(): boolean {
 	if (!browser) return false;
 	try {
@@ -12,98 +8,68 @@ export function supportsMediaPipe(): boolean {
 	} catch { return false; }
 }
 
+// @imgly/background-removal tidak menggunakan isLoading model manual seperti MediaPipe
+// tapi kita tetap export untuk kompatibilitas UI jika diperlukan
 export function isLoading(): boolean {
-	return _isLoading;
-}
-
-async function getSegmenter(): Promise<any> {
-	if (segmenter) return segmenter;
-	if (loadPromise) return loadPromise;
-
-	_isLoading = true;
-	loadPromise = (async () => {
-		try {
-			await import('@mediapipe/selfie_segmentation');
-			const SelfieSegmentation = (window as any).SelfieSegmentation;
-			if (!SelfieSegmentation) throw new Error('Library gagal dimuat');
-
-			segmenter = new SelfieSegmentation({
-				locateFile: (file: string) =>
-					`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
-			});
-
-			segmenter.setOptions({ modelSelection: 1 });
-			await segmenter.initialize();
-		} finally {
-			_isLoading = false;
-		}
-	})();
-
-	await loadPromise;
-	return segmenter;
-}
-
-function getMask(seg: any, canvas: HTMLCanvasElement): Promise<ImageBitmap> {
-	return new Promise((resolve) => {
-		seg.onResults((results: any) => {
-			resolve(results.segmentationMask as ImageBitmap);
-		});
-		seg.send({ image: canvas });
-	});
+	return false;
 }
 
 export async function replaceBackground(
 	file: File,
 	bgColor: string = '#FF0000'
 ): Promise<Blob> {
-	if (!browser) throw new Error('Cannot process on server');
+	if (!browser) throw new Error('Hanya bisa dijalankan di browser');
 
-	const seg = await getSegmenter();
+	// Dynamic imports untuk menghemat bundle size
+	const [smartcrop, { removeBackground }] = await Promise.all([
+		import('smartcrop'),
+		import('@imgly/background-removal')
+	]);
 
 	const img = await createImageBitmap(file);
 
-	const cropSize = Math.min(img.width, img.height);
-	const sx = Math.floor((img.width - cropSize) / 2);
-	const sy = Math.floor((img.height - cropSize) / 2);
-	const outSize = 400;
+	// --- STEP 1: Smart Centering menggunakan smartcrop.js ---
+	const cropResult = await smartcrop.default.crop(img, { 
+		width: 400, 
+		height: 400,
+		minScale: 0.8
+	});
+	const crop = cropResult.topCrop;
 
-	const inputCanvas = document.createElement('canvas');
-	inputCanvas.width = outSize;
-	inputCanvas.height = outSize;
-	const inputCtx = inputCanvas.getContext('2d')!;
-	inputCtx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, outSize, outSize);
+	const outSize = 400;
+	const cropCanvas = document.createElement('canvas');
+	cropCanvas.width = outSize;
+	cropCanvas.height = outSize;
+	const cropCtx = cropCanvas.getContext('2d')!;
+	cropCtx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, outSize, outSize);
 	img.close();
 
-	const mask = await getMask(seg, inputCanvas);
+	// --- STEP 2: Background Removal menggunakan @imgly/background-removal ---
+	// Konversi canvas ke blob untuk input imgly
+	const croppedBlob = await new Promise<Blob>((resolve) => cropCanvas.toBlob(b => resolve(b!), 'image/jpeg', 0.95));
+	
+	// Hapus background (mengembalikan blob PNG transparan)
+	const noBgBlob = await removeBackground(croppedBlob, {
+		model: 'medium', // 'small' (lebih cepat), 'medium' (seimbang), 'large' (paling rapi)
+		progress: (m, p) => {
+			// console.log(`Memproses background: ${m} ${Math.round(p * 100)}%`);
+		}
+	});
 
-	const tR = parseInt(bgColor.slice(1, 3), 16);
-	const tG = parseInt(bgColor.slice(3, 5), 16);
-	const tB = parseInt(bgColor.slice(5, 7), 16);
-
-	const maskCanvas = document.createElement('canvas');
-	maskCanvas.width = outSize;
-	maskCanvas.height = outSize;
-	const maskCtx = maskCanvas.getContext('2d')!;
-	maskCtx.drawImage(mask, 0, 0, outSize, outSize);
-
-	const personCanvas = document.createElement('canvas');
-	personCanvas.width = outSize;
-	personCanvas.height = outSize;
-	const personCtx = personCanvas.getContext('2d')!;
-	personCtx.drawImage(inputCanvas, 0, 0);
-	personCtx.globalCompositeOperation = 'destination-in';
-	personCtx.imageSmoothingEnabled = true;
-	personCtx.drawImage(maskCanvas, 0, 0);
-
-	if ('close' in mask) (mask as any).close();
-
+	// --- STEP 3: Terapkan Background Merah ---
+	const noBgImg = await createImageBitmap(noBgBlob);
 	const outputCanvas = document.createElement('canvas');
 	outputCanvas.width = outSize;
 	outputCanvas.height = outSize;
 	const outputCtx = outputCanvas.getContext('2d')!;
+
+	// Isi warna merah
 	outputCtx.fillStyle = bgColor;
 	outputCtx.fillRect(0, 0, outSize, outSize);
-	outputCtx.drawImage(personCanvas, 0, 0);
+
+	// Tempelkan orang (yang sudah transparan)
+	outputCtx.drawImage(noBgImg, 0, 0, outSize, outSize);
+	noBgImg.close();
 
 	return new Promise((resolve) => {
 		outputCanvas.toBlob(
