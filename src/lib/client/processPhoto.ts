@@ -26,10 +26,14 @@ export async function replaceBackground(
 		import('@imgly/background-removal')
 	]);
 
-	const img = await createImageBitmap(file);
+	// --- OPTIMASI 1: Pre-compression (Resize Instan) ---
+	const workingImg = await createImageBitmap(file, { 
+		resizeWidth: 1000, 
+		resizeQuality: 'medium' 
+	});
 
-	// --- STEP 1: Smart Centering menggunakan smartcrop.js ---
-	const cropResult = await smartcrop.default.crop(img, { 
+	// --- STEP 1: Smart Centering ---
+	const cropResult = await smartcrop.default.crop(workingImg, { 
 		width: 400, 
 		height: 400,
 		minScale: 0.8
@@ -41,19 +45,17 @@ export async function replaceBackground(
 	cropCanvas.width = outSize;
 	cropCanvas.height = outSize;
 	const cropCtx = cropCanvas.getContext('2d')!;
-	cropCtx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, outSize, outSize);
-	img.close();
-
-	// --- STEP 2: Background Removal menggunakan @imgly/background-removal ---
-	// Konversi canvas ke blob untuk input imgly
-	const croppedBlob = await new Promise<Blob>((resolve) => cropCanvas.toBlob(b => resolve(b!), 'image/jpeg', 0.95));
 	
-	// Hapus background (mengembalikan blob PNG transparan)
+	cropCtx.imageSmoothingEnabled = true;
+	cropCtx.imageSmoothingQuality = 'high';
+	cropCtx.drawImage(workingImg, crop.x, crop.y, crop.width, crop.height, 0, 0, outSize, outSize);
+	workingImg.close();
+
+	// --- STEP 2: Background Removal ---
+	const croppedBlob = await new Promise<Blob>((resolve) => cropCanvas.toBlob(b => resolve(b!), 'image/jpeg', 0.90));
+	
 	const noBgBlob = await removeBackground(croppedBlob, {
-		model: 'medium', // 'small' (lebih cepat), 'medium' (seimbang), 'large' (paling rapi)
-		progress: (m, p) => {
-			// console.log(`Memproses background: ${m} ${Math.round(p * 100)}%`);
-		}
+		model: 'small', // Lebih cepat untuk foto wajah
 	});
 
 	// --- STEP 3: Terapkan Background Merah ---
