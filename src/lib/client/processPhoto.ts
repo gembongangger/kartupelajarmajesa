@@ -7,11 +7,33 @@ type FaceBox = {
 	height: number;
 };
 
+type CropBox = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+};
+
+type MaskBounds = {
+	left: number;
+	top: number;
+	right: number;
+	bottom: number;
+};
+
+type ForegroundMask = {
+	canvas: HTMLCanvasElement;
+	bounds: MaskBounds | null;
+};
+
 const OUTPUT_WIDTH = 360;
 const OUTPUT_HEIGHT = 440;
 const WORKING_RESIZE_WIDTH = 900;
 const FACE_HEIGHT_RATIO = 0.28;
 const FACE_CENTER_Y_RATIO = 0.5;
+const PERSON_MIN_MARGIN_X = 26;
+const PERSON_MIN_MARGIN_TOP = 18;
+const PERSON_MIN_MARGIN_BOTTOM = 46;
 const MEDIAPIPE_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm';
 const FACE_DETECTOR_MODEL_URL =
 	'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite';
@@ -107,7 +129,7 @@ function clamp(value: number, min: number, max: number) {
 	return Math.min(Math.max(value, min), max);
 }
 
-function getFaceCrop(image: ImageBitmap, face: FaceBox | null) {
+function getFaceCrop(image: ImageBitmap, face: FaceBox | null): CropBox {
 	const imageRatio = image.width / image.height;
 	const outputRatio = OUTPUT_WIDTH / OUTPUT_HEIGHT;
 
@@ -158,7 +180,7 @@ function getFaceCrop(image: ImageBitmap, face: FaceBox | null) {
 function drawCropWithPadding(
 	ctx: CanvasRenderingContext2D,
 	image: ImageBitmap,
-	crop: { x: number; y: number; width: number; height: number }
+	crop: CropBox
 ) {
 	const sourceX = clamp(crop.x, 0, image.width);
 	const sourceY = clamp(crop.y, 0, image.height);
@@ -187,6 +209,18 @@ function drawCropWithPadding(
 		destWidth,
 		destHeight
 	);
+}
+
+function drawPreparedCrop(
+	ctx: CanvasRenderingContext2D,
+	image: ImageBitmap,
+	crop: CropBox,
+	bgColor: string
+) {
+	ctx.clearRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
+	ctx.fillStyle = bgColor;
+	ctx.fillRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
+	drawCropWithPadding(ctx, image, crop);
 }
 
 function smoothstep(edge0: number, edge1: number, value: number) {
@@ -219,7 +253,74 @@ function erodeAlpha(alpha: Uint8ClampedArray, width: number, height: number) {
 	return output;
 }
 
-async function createForegroundMask(image: HTMLCanvasElement) {
+function getAlphaBounds(alpha: Uint8ClampedArray, width: number, height: number): MaskBounds | null {
+	let left = width;
+	let top = height;
+	let right = -1;
+	let bottom = -1;
+
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			if (alpha[y * width + x] < 18) continue;
+
+			left = Math.min(left, x);
+			top = Math.min(top, y);
+			right = Math.max(right, x);
+			bottom = Math.max(bottom, y);
+		}
+	}
+
+	if (right < left || bottom < top) return null;
+	return { left, top, right, bottom };
+}
+
+function adjustCropForPersonBounds(crop: CropBox, bounds: MaskBounds | null, image: ImageBitmap): CropBox | null {
+	if (!bounds) return null;
+
+	const leftMargin = bounds.left;
+	const rightMargin = OUTPUT_WIDTH - bounds.right;
+	const topMargin = bounds.top;
+	const bottomMargin = OUTPUT_HEIGHT - bounds.bottom;
+	const sourcePerPixelY = crop.height / OUTPUT_HEIGHT;
+	let nextCrop = { ...crop };
+	let changed = false;
+
+	if (bottomMargin < PERSON_MIN_MARGIN_BOTTOM && topMargin > PERSON_MIN_MARGIN_TOP) {
+		const shiftDown = Math.min(PERSON_MIN_MARGIN_BOTTOM - bottomMargin, topMargin - PERSON_MIN_MARGIN_TOP);
+		nextCrop.y += shiftDown * sourcePerPixelY;
+		changed = true;
+	}
+
+	if (leftMargin < PERSON_MIN_MARGIN_X || rightMargin < PERSON_MIN_MARGIN_X) {
+		const growRatio = 1 + Math.min(0.18, Math.max(
+			PERSON_MIN_MARGIN_X - leftMargin,
+			PERSON_MIN_MARGIN_X - rightMargin,
+			0
+		) / OUTPUT_WIDTH);
+		const centerX = crop.x + crop.width / 2;
+		const centerY = crop.y + crop.height / 2;
+		const outputRatio = OUTPUT_WIDTH / OUTPUT_HEIGHT;
+
+		nextCrop.height = Math.min(crop.height * growRatio, image.height);
+		nextCrop.width = nextCrop.height * outputRatio;
+
+		if (nextCrop.width > image.width) {
+			nextCrop.width = image.width;
+			nextCrop.height = nextCrop.width / outputRatio;
+		}
+
+		nextCrop.x = centerX - nextCrop.width / 2;
+		nextCrop.y = centerY - nextCrop.height / 2;
+		changed = true;
+	}
+
+	nextCrop.y = clamp(nextCrop.y, 0, Math.max(0, image.height - nextCrop.height));
+
+	if (!changed) return null;
+	return nextCrop;
+}
+
+async function createForegroundMask(image: HTMLCanvasElement): Promise<ForegroundMask> {
 	const segmenter = await getImageSegmenter();
 	const result = segmenter.segment(image);
 	const confidenceMask = result?.confidenceMasks?.[1] ?? result?.confidenceMasks?.[0];
@@ -229,10 +330,10 @@ async function createForegroundMask(image: HTMLCanvasElement) {
 		throw new Error('Mask segmentasi orang tidak tersedia');
 	}
 
-	const width = confidenceMask?.width ?? categoryMask.width;
-	const height = confidenceMask?.height ?? categoryMask.height;
+	const width = confidenceMask?.width ?? categoryMask!.width;
+	const height = confidenceMask?.height ?? categoryMask!.height;
 	const confidence = confidenceMask?.getAsFloat32Array();
-	const category = confidence ? null : categoryMask.getAsUint8Array();
+	const category = confidence ? null : categoryMask!.getAsUint8Array();
 	const alphaMap = new Uint8ClampedArray(width * height);
 	const maskData = new ImageData(width, height);
 	const data = maskData.data;
@@ -244,6 +345,7 @@ async function createForegroundMask(image: HTMLCanvasElement) {
 	}
 
 	const cleanedAlpha = erodeAlpha(alphaMap, width, height);
+	const bounds = getAlphaBounds(cleanedAlpha, width, height);
 
 	for (let i = 0; i < data.length; i += 4) {
 		const maskIndex = i / 4;
@@ -260,7 +362,7 @@ async function createForegroundMask(image: HTMLCanvasElement) {
 	confidenceMask?.close?.();
 	categoryMask?.close?.();
 
-	return maskCanvas;
+	return { canvas: maskCanvas, bounds };
 }
 
 export async function replaceBackground(
@@ -275,7 +377,7 @@ export async function replaceBackground(
 	});
 
 	const face = await detectFace(workingImg);
-	const crop = getFaceCrop(workingImg, face);
+	let crop = getFaceCrop(workingImg, face);
 
 	const cropCanvas = document.createElement('canvas');
 	cropCanvas.width = OUTPUT_WIDTH;
@@ -284,19 +386,27 @@ export async function replaceBackground(
 	
 	cropCtx.imageSmoothingEnabled = true;
 	cropCtx.imageSmoothingQuality = 'high';
-	cropCtx.fillStyle = bgColor;
-	cropCtx.fillRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
-	drawCropWithPadding(cropCtx, workingImg, crop);
-	workingImg.close();
+	drawPreparedCrop(cropCtx, workingImg, crop, bgColor);
 
-	const maskCanvas = await createForegroundMask(cropCanvas);
+	let mask = await createForegroundMask(cropCanvas);
+
+	for (let i = 0; i < 2; i++) {
+		const adjustedCrop = adjustCropForPersonBounds(crop, mask.bounds, workingImg);
+		if (!adjustedCrop) break;
+
+		crop = adjustedCrop;
+		drawPreparedCrop(cropCtx, workingImg, crop, bgColor);
+		mask = await createForegroundMask(cropCanvas);
+	}
+
+	workingImg.close();
 	const foregroundCanvas = document.createElement('canvas');
 	foregroundCanvas.width = OUTPUT_WIDTH;
 	foregroundCanvas.height = OUTPUT_HEIGHT;
 	const foregroundCtx = foregroundCanvas.getContext('2d')!;
 	foregroundCtx.drawImage(cropCanvas, 0, 0);
 	foregroundCtx.globalCompositeOperation = 'destination-in';
-	foregroundCtx.drawImage(maskCanvas, 0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
+	foregroundCtx.drawImage(mask.canvas, 0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
 
 	const outputCanvas = document.createElement('canvas');
 	outputCanvas.width = OUTPUT_WIDTH;

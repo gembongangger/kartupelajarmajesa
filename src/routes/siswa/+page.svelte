@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { onDestroy } from 'svelte';
 	import { replaceBackground, supportsMediaPipe } from '$lib/client/processPhoto';
 
 	let { data } = $props();
@@ -9,6 +10,14 @@
 	let submitting2 = $state(false);
 	let modelLoad = $state(false);
 	let notify: { type: 'success' | 'error'; message: string } | null = $state(null);
+	let fotoPreview = $state(siswa.nisn ? `/foto/${siswa.nisn}.jpg?t=${Date.now()}` : '');
+	let pendingPreviewUrl: string | null = null;
+	let activePreviewUrl: string | null = null;
+
+	onDestroy(() => {
+		if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+		if (activePreviewUrl) URL.revokeObjectURL(activePreviewUrl);
+	});
 
 	function handleUpdate() {
 		submitting1 = true;
@@ -42,6 +51,9 @@
 			const processed = await replaceBackground(file, '#FF0000');
 			modelLoad = false;
 			formData.set('foto', processed, file.name);
+
+			if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+			pendingPreviewUrl = URL.createObjectURL(processed);
 		} catch (e: any) {
 			notify = { type: 'error', message: 'Gagal proses foto: ' + (e.message || '') };
 			setTimeout(() => { notify = null; }, 4000);
@@ -52,10 +64,26 @@
 		return async ({ result }: { result: any }) => {
 			submitting2 = false;
 			if (result.type === 'success' && result.data?.success) {
+				if (pendingPreviewUrl) {
+					if (activePreviewUrl) URL.revokeObjectURL(activePreviewUrl);
+					fotoPreview = pendingPreviewUrl;
+					activePreviewUrl = pendingPreviewUrl;
+					pendingPreviewUrl = null;
+				} else if (siswa.nisn) {
+					fotoPreview = `/foto/${siswa.nisn}.jpg?t=${Date.now()}`;
+				}
 				notify = { type: 'success', message: 'Foto berhasil diupload dengan background merah' };
 			} else if (result.type === 'failure') {
+				if (pendingPreviewUrl) {
+					URL.revokeObjectURL(pendingPreviewUrl);
+					pendingPreviewUrl = null;
+				}
 				notify = { type: 'error', message: result.data?.message || 'Gagal upload foto' };
 			} else {
+				if (pendingPreviewUrl) {
+					URL.revokeObjectURL(pendingPreviewUrl);
+					pendingPreviewUrl = null;
+				}
 				notify = { type: 'error', message: 'Gagal upload foto' };
 			}
 			setTimeout(() => { notify = null; }, 4000);
@@ -121,10 +149,10 @@
 
 		<div class="bg-white rounded-xl border border-cf-border p-6 mb-6">
 			<h2 class="text-lg font-semibold text-cf-text mb-4">Foto Siswa</h2>
-			{#if siswa.nisn}
+			{#if fotoPreview}
 				<div class="mb-4">
-					<img src="/foto/{siswa.nisn}.jpg?t={Date.now()}" alt="Foto Siswa"
-						class="w-36 h-36 object-cover rounded-lg border border-cf-border">
+					<img src={fotoPreview} alt="Foto Siswa"
+						class="w-36 h-44 object-cover rounded-lg border border-cf-border">
 				</div>
 			{/if}
 			<form method="POST" action="?/upload_foto" enctype="multipart/form-data" use:enhance={handleUpload}>
