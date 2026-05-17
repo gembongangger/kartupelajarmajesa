@@ -541,13 +541,13 @@ async function createForegroundMask(image: HTMLCanvasElement): Promise<Foregroun
 
 	for (let i = 0; i < alphaMap.length; i++) {
 		alphaMap[i] = confidence
-			? smoothstep(0.25, 0.55, confidence[i]) * 255
+			? smoothstep(0.15, 0.55, confidence[i]) * 255
 			: category![i] === 1 ? 255 : 0;
 	}
 
-	let cleanedAlpha = erodeAlpha(alphaMap, sw, sh);
-	cleanedAlpha = closeAlpha(cleanedAlpha, sw, sh);
+	let cleanedAlpha = closeAlpha(alphaMap, sw, sh);
 	fillAlphaHoles(cleanedAlpha, sw, sh);
+	cleanedAlpha = dilateAlpha(cleanedAlpha, sw, sh);
 
 	for (let i = 0; i < cleanedAlpha.length; i++) {
 		cleanedAlpha[i] = clamp(cleanedAlpha[i], 0, 255);
@@ -578,7 +578,10 @@ async function createForegroundMask(image: HTMLCanvasElement): Promise<Foregroun
 		sd[i + 3] = cleanedAlpha[maskIndex];
 	}
 	srcCtx.putImageData(srcData, 0, 0);
+
+	scaledCtx.filter = 'blur(1.5px)';
 	scaledCtx.drawImage(srcCanvas, 0, 0, iw, ih);
+	scaledCtx.filter = 'none';
 
 	const scaledData = scaledCtx.getImageData(0, 0, iw, ih);
 	const dd = scaledData.data;
