@@ -15,7 +15,7 @@ async function generateBarcodeDataURL(text: string): Promise<string | null> {
         bwipjs.toCanvas(canvas, {
             bcid: 'code128',
             text: text,
-            scale: 3,
+            scale: 2,
             height: 10,
             includetext: false,
         });
@@ -71,40 +71,57 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
 
         // Data Siswa
         const labelX = x + 24;
-        const colonX = labelX + 12;
+        const colonX = labelX + 10;
         const valueX = colonX + 2;
 
-        doc.setFontSize(7);
+        doc.setFontSize(6);
         doc.setFont('helvetica', 'bold');
         doc.text('NAMA', labelX, y + 16);
         doc.text(':', colonX, y + 16);
         doc.setFont('helvetica', 'normal');
-        doc.text(student.nama, valueX, y + 16, { align: 'left' });
+        doc.text(student.nama, valueX, y + 16);
 
         doc.setFont('helvetica', 'bold');
-        doc.text('NISN', labelX, y + 20);
-        doc.text(':', colonX, y + 20);
+        doc.text('NISN', labelX, y + 19);
+        doc.text(':', colonX, y + 19);
         doc.setFont('helvetica', 'normal');
-        doc.text(student.nisn, valueX, y + 20, { align: 'left' });
+        doc.text(student.nisn, valueX, y + 19);
 
         doc.setFont('helvetica', 'bold');
-        doc.text('TTL', labelX, y + 24);
-        doc.text(':', colonX, y + 24);
+        doc.text('TTL', labelX, y + 22);
+        doc.text(':', colonX, y + 22);
         doc.setFont('helvetica', 'normal');
-        doc.text(`${student.tempat_lahir}, ${tanggalIndonesia(student.tanggal_lahir)}`, valueX, y + 24, { align: 'left' });
+        doc.text(`${student.tempat_lahir}, ${tanggalIndonesia(student.tanggal_lahir)}`, valueX, y + 22);
 
         doc.setFont('helvetica', 'bold');
-        doc.text('JK', labelX, y + 28);
-        doc.text(':', colonX, y + 28);
+        doc.text('JK', labelX, y + 25);
+        doc.text(':', colonX, y + 25);
         doc.setFont('helvetica', 'normal');
-        doc.text(student.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', valueX, y + 28, { align: 'left' });
+        doc.text(student.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', valueX, y + 25);
 
         // Barcode
         const barcodeDataURL = await generateBarcodeDataURL(student.nisn);
+        const barcodeCenterX = x + 22;
         if (barcodeDataURL) {
-            doc.addImage(barcodeDataURL, x + 13, y + 38, 60, 8);
+            doc.roundedRect(barcodeCenterX - 16, y + 35, 32, 6, 1);
+            doc.addImage(barcodeDataURL, barcodeCenterX - 15, y + 36, 30, 4);
         }
-        doc.text(student.nisn, x + pengaturan.lebar_kartu / 2, y + 49, { align: 'center' });
+        doc.setFontSize(5);
+        doc.text(student.nisn, barcodeCenterX, y + 41.5, { align: 'center' });
+
+        // TTD
+        const ttdCenterX = x + pengaturan.lebar_kartu - 20;
+        doc.setFontSize(5.5);
+        doc.setFont('helvetica', 'normal');
+        doc.text(ttdDate, ttdCenterX, y + 33, { align: 'center' });
+        doc.text('Kepala Sekolah,', ttdCenterX, y + 36, { align: 'center' });
+        if (pengaturan.tanda_tangan) {
+            doc.addImage(pengaturan.tanda_tangan, ttdCenterX - 7, y + 37.5, 14, 5);
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.text(headMaster, ttdCenterX, y + 43.5, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.text(headNip, ttdCenterX, y + 46.5, { align: 'center' });
 
         // Back Card
         const xBack = x + pengaturan.lebar_kartu + pengaturan.gap_depan_belakang;
@@ -154,20 +171,7 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
             }
         });
 
-        // TTD
-        const centerX = xBack + pengaturan.lebar_kartu / 2;
-        const ttdStart = Math.max(y + 30, currentY + 2);
-        doc.text(ttdDate, centerX, ttdStart, { align: 'center' });
-        doc.text('Kepala Sekolah,', centerX, ttdStart + 3, { align: 'center' });
 
-        if (pengaturan.tanda_tangan) {
-            doc.addImage(pengaturan.tanda_tangan, centerX - 10, ttdStart + 4.5, 20, 7);
-        }
-
-        doc.setFont('helvetica', 'bold');
-        doc.text(headMaster, centerX, ttdStart + 12.5, { align: 'center' });
-        doc.setFont('helvetica', 'normal');
-        doc.text(headNip, centerX, ttdStart + 15, { align: 'center' });
     }
 
     doc.save('Kartu_Pelajar.pdf');

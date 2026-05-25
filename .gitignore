@@ -21,3 +21,8 @@ dist
 
 # Cloudflare
 .wrangler
+
+# Turso embedded replica
+local.db
+local.db-wal
+local.db-shm
