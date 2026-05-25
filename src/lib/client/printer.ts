@@ -66,7 +66,12 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
 
         // Foto Siswa
         if (student.foto) {
+            doc.saveGraphicsState();
+            doc.roundedRect(x + 4, y + 12, 18, 22, 2, 2, null);
+            doc.clip();
+            doc.discardPath();
             doc.addImage(student.foto, x + 4, y + 12, 18, 22);
+            doc.restoreGraphicsState();
         }
 
         // Data Siswa
@@ -103,25 +108,25 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         const barcodeDataURL = await generateBarcodeDataURL(student.nisn);
         const barcodeCenterX = x + 22;
         if (barcodeDataURL) {
-            doc.roundedRect(barcodeCenterX - 17, y + 34, 34, 9, 1, 1, 'S');
-            doc.addImage(barcodeDataURL, barcodeCenterX - 15, y + 36, 30, 4);
+            doc.roundedRect(barcodeCenterX - 17, y + 36, 34, 9, 1, 1, 'S');
+            doc.addImage(barcodeDataURL, barcodeCenterX - 15, y + 38, 30, 4);
         }
         doc.setFontSize(5);
-        doc.text(student.nisn, barcodeCenterX, y + 41.5, { align: 'center' });
+        doc.text(student.nisn, barcodeCenterX, y + 43.5, { align: 'center' });
 
         // TTD
         const ttdCenterX = x + pengaturan.lebar_kartu - 20;
         doc.setFontSize(5.5);
         doc.setFont('helvetica', 'normal');
-        doc.text(ttdDate, ttdCenterX, y + 33, { align: 'center' });
-        doc.text('Kepala Sekolah,', ttdCenterX, y + 36, { align: 'center' });
+        doc.text(ttdDate, ttdCenterX, y + 35, { align: 'center' });
+        doc.text('Kepala Sekolah,', ttdCenterX, y + 38, { align: 'center' });
         if (pengaturan.tanda_tangan) {
-            doc.addImage(pengaturan.tanda_tangan, ttdCenterX - 7, y + 37.5, 14, 5);
+            doc.addImage(pengaturan.tanda_tangan, ttdCenterX - 7, y + 39.5, 14, 5);
         }
         doc.setFont('helvetica', 'bold');
-        doc.text(headMaster, ttdCenterX, y + 43.5, { align: 'center' });
+        doc.text(headMaster, ttdCenterX, y + 45.5, { align: 'center' });
         doc.setFont('helvetica', 'normal');
-        doc.text(headNip, ttdCenterX, y + 46.5, { align: 'center' });
+        doc.text(headNip, ttdCenterX, y + 48.5, { align: 'center' });
 
         // Back Card
         const xBack = x + pengaturan.lebar_kartu + pengaturan.gap_depan_belakang;
