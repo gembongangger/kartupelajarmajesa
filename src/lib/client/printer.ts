@@ -103,7 +103,7 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         const barcodeDataURL = await generateBarcodeDataURL(student.nisn);
         const barcodeCenterX = x + 22;
         if (barcodeDataURL) {
-            doc.roundedRect(barcodeCenterX - 16, y + 35, 32, 6, 1, 1, 'S');
+            doc.roundedRect(barcodeCenterX - 17, y + 34, 34, 9, 1, 1, 'S');
             doc.addImage(barcodeDataURL, barcodeCenterX - 15, y + 36, 30, 4);
         }
         doc.setFontSize(5);
