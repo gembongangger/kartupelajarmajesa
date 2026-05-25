@@ -7,18 +7,14 @@ if (!building && !env.TURSO_CONNECTION_URL) {
 }
 
 const client = dev
-    ? createClient({
-        url: 'file:local.db',
-        syncUrl: env.TURSO_CONNECTION_URL,
-        authToken: env.TURSO_AUTH_TOKEN,
-    })
+    ? createClient({ url: 'file:local.db' })
     : createClient({
         url: env.TURSO_CONNECTION_URL || 'file:local.db',
         authToken: env.TURSO_AUTH_TOKEN,
     });
 
 if (!building) {
-    console.log('Database:', dev ? 'Embedded replica (local.db)' : 'Turso remote');
+    console.log('Database:', dev ? 'SQLite lokal (local.db)' : 'Turso remote');
 }
 
 export default client;
