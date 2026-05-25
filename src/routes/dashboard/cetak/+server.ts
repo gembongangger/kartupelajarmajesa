@@ -58,6 +58,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	} catch (e) {
 		console.error('Data fetch error:', e);
 		if (e instanceof Response) throw e;
-		throw error(500, 'Gagal mengambil data cetak');
+		const msg = e instanceof Error ? e.message : 'Gagal mengambil data cetak';
+		throw error(500, msg);
 	}
 };
