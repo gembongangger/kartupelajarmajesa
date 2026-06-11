@@ -30,6 +30,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			margin_atas,
 			spasi_kartu,
 			gap_depan_belakang,
+			tampilkan_ttd_depan,
 			logo IS NOT NULL AS has_logo,
 			tanda_tangan IS NOT NULL AS has_tanda_tangan,
 			background IS NOT NULL AS has_background,
@@ -109,6 +110,7 @@ export const actions: Actions = {
 		const margin_atas = parseInt(data.get('margin_atas')?.toString() || '10');
 		const spasi_kartu = parseInt(data.get('spasi_kartu')?.toString() || '4');
 		const gap_depan_belakang = parseInt(data.get('gap_depan_belakang')?.toString() || '4');
+		const tampilkan_ttd_depan = data.get('tampilkan_ttd_depan') === 'on' ? 1 : 0;
 
 		const args = [
 			nama?.toString(),
@@ -127,6 +129,7 @@ export const actions: Actions = {
 			margin_atas,
 			spasi_kartu,
 			gap_depan_belakang,
+			tampilkan_ttd_depan,
 			newLogo?.blob ?? null,
 			newLogo?.mime ?? null,
 			newTtd?.blob ?? null,
@@ -156,6 +159,7 @@ export const actions: Actions = {
 					margin_atas = ?,
 					spasi_kartu = ?,
 					gap_depan_belakang = ?,
+					tampilkan_ttd_depan = ?,
 					logo = COALESCE(?, logo),
 					logo_mime = COALESCE(?, logo_mime),
 					tanda_tangan = COALESCE(?, tanda_tangan),

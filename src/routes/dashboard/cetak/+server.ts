@@ -45,6 +45,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 		const pengaturan = {
 			...pengaturanRow,
+			tampilkan_ttd_depan: Number(String(pengaturanRow.tampilkan_ttd_depan ?? 1)),
 			logo: blobToDataURL(pengaturanRow.logo, pengaturanRow.logo_mime || 'image/png'),
 			tanda_tangan: blobToDataURL(pengaturanRow.tanda_tangan, pengaturanRow.tanda_tangan_mime || 'image/png'),
 			background: blobToDataURL(pengaturanRow.background, pengaturanRow.background_mime || 'image/jpeg'),

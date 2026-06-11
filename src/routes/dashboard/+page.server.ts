@@ -79,7 +79,8 @@ export const actions: Actions = {
 					margin_kiri INTEGER DEFAULT 10,
 					margin_atas INTEGER DEFAULT 10,
 					spasi_kartu INTEGER DEFAULT 4,
-					gap_depan_belakang INTEGER DEFAULT 4
+					gap_depan_belakang INTEGER DEFAULT 4,
+				tampilkan_ttd_depan INTEGER DEFAULT 1
 				);
 				CREATE TABLE users (
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,9 +106,9 @@ export const actions: Actions = {
 				);
 
 				INSERT INTO pengaturan (id, nama_sekolah, alamat, kepala_sekolah, nip_kepala_sekolah, tanggal_ttd,
-					jenis_kertas, lebar_kertas, tinggi_kertas, lebar_kartu, tinggi_kartu, margin_kiri, margin_atas, spasi_kartu, gap_depan_belakang)
+					jenis_kertas, lebar_kertas, tinggi_kertas, lebar_kartu, tinggi_kartu, margin_kiri, margin_atas, spasi_kartu, gap_depan_belakang, tampilkan_ttd_depan)
 				VALUES (1, 'SD NEGERI BERMUTU', 'Jalan Kebagusan, RT.27 RW.05 Kelurahan Sumberberkah, Kec. Gemahripah', 'Nir Singgih Purwantio, S.Pd.', '198705092021021004', '2025-07-14',
-					'A4', 210, 297, 86, 56, 10, 10, 4, 4);
+					'A4', 210, 297, 86, 56, 10, 10, 4, 4, 1);
 			`);
 
 			const adminPass = await md5('admin123');

@@ -213,6 +213,13 @@
 					<input type="number" name="gap_depan_belakang" id="gap_depan_belakang" value={pengaturan.gap_depan_belakang} min="0"
 						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
 				</div>
+				<div class="col-span-2">
+					<label class="flex items-center gap-3 cursor-pointer">
+						<input type="checkbox" name="tampilkan_ttd_depan" checked={pengaturan.tampilkan_ttd_depan === 1}
+							class="w-4 h-4 rounded border-cf-border text-cf-orange focus:ring-cf-orange cursor-pointer">
+						<span class="text-sm text-cf-text">Tampilkan Tanda Tangan di Kartu Depan</span>
+					</label>
+				</div>
 			</div>
 
 			<hr class="border-cf-border my-6">

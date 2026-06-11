@@ -39,12 +39,17 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
     const doc = new jsPDF('p', 'mm', paperSize);
 
     const ttdDate = `Ditetapkan di: ${pengaturan.kota_ttd || '......'}, ${tanggalIndonesia(pengaturan.tanggal_ttd)}`;
-    const tataTertib = (pengaturan.tata_tertib || `1. Kartu ini wajib dibawa setiap hari sekolah.\n2. Jika menemukan kartu ini, mohon dikembalikan ke:\n${pengaturan.nama_sekolah}\n${pengaturan.alamat}`)
+    const tataTertib = (pengaturan.tata_tertib ?? '')
         .replace(/\r\n/g, '\n').replace(/\r/g, '\n')
         .replace(/^\. /gm, '• ').replace(/^(\d+)\. /gm, '$1. ')
         .replace(/\n{3,}/g, '\n\n').trim();
     const headMaster = pengaturan.kepala_sekolah;
     const headNip = `NIP. ${pengaturan.nip_kepala_sekolah}`;
+
+    const barcodeMap = new Map<string, string | null>();
+    await Promise.all(students.map(async (s) => {
+        barcodeMap.set(s.nisn, await generateBarcodeDataURL(s.nisn));
+    }));
 
     for (let i = 0; i < students.length; i++) {
         const student = students[i];
@@ -105,28 +110,29 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         doc.text(student.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', valueX, y + 25);
 
         // Barcode
-        const barcodeDataURL = await generateBarcodeDataURL(student.nisn);
+        const barcodeDataURL = barcodeMap.get(student.nisn);
         const barcodeCenterX = x + 22;
         if (barcodeDataURL) {
-            doc.roundedRect(barcodeCenterX - 17, y + 36, 34, 9, 1, 1, 'S');
-            doc.addImage(barcodeDataURL, barcodeCenterX - 15, y + 38, 30, 4);
+            doc.addImage(barcodeDataURL, barcodeCenterX - 16, y + 43, 22, 3.5);
         }
         doc.setFontSize(5);
-        doc.text(student.nisn, barcodeCenterX, y + 43.5, { align: 'center' });
+        doc.text(student.nisn, barcodeCenterX - 4, y + 48, { align: 'center' });
 
         // TTD
-        const ttdCenterX = x + pengaturan.lebar_kartu - 20;
-        doc.setFontSize(5.5);
-        doc.setFont('helvetica', 'normal');
-        doc.text(ttdDate, ttdCenterX, y + 35, { align: 'center' });
-        doc.text('Kepala Sekolah,', ttdCenterX, y + 38, { align: 'center' });
-        if (pengaturan.tanda_tangan) {
-            doc.addImage(pengaturan.tanda_tangan, ttdCenterX - 7, y + 39.5, 14, 5);
+        if (pengaturan.tampilkan_ttd_depan !== 0) {
+            const ttdCenterX = x + pengaturan.lebar_kartu - 20;
+            doc.setFontSize(5.5);
+            doc.setFont('helvetica', 'normal');
+            doc.text(ttdDate, ttdCenterX, y + 35, { align: 'center' });
+            doc.text('Kepala Sekolah,', ttdCenterX, y + 38, { align: 'center' });
+            if (pengaturan.tanda_tangan) {
+                doc.addImage(pengaturan.tanda_tangan, ttdCenterX - 7, y + 39.5, 14, 5);
+            }
+            doc.setFont('helvetica', 'bold');
+            doc.text(headMaster, ttdCenterX, y + 45.5, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.text(headNip, ttdCenterX, y + 48.5, { align: 'center' });
         }
-        doc.setFont('helvetica', 'bold');
-        doc.text(headMaster, ttdCenterX, y + 45.5, { align: 'center' });
-        doc.setFont('helvetica', 'normal');
-        doc.text(headNip, ttdCenterX, y + 48.5, { align: 'center' });
 
         // Back Card
         const xBack = x + pengaturan.lebar_kartu + pengaturan.gap_depan_belakang;
@@ -136,46 +142,47 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
             doc.addImage(pengaturan.background_belakang, xBack, y, pengaturan.lebar_kartu, pengaturan.tinggi_kartu);
         }
 
-        doc.setFontSize(7);
-        doc.setFont('helvetica', 'bold');
-        doc.text('TATA TERTIB/KETERANGAN', xBack + 5, y + 8);
-        doc.setFont('helvetica', 'normal');
+        if (tataTertib) {
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'bold');
+            doc.text('TATA TERTIB/KETERANGAN', xBack + 5, y + 8);
+            doc.setFont('helvetica', 'normal');
 
-        // Render Tata Tertib dengan hanging indent
-        let currentY = y + 12;
-        const ttLines = tataTertib.split('\n');
-        const indent = 3.5; 
-        const ttMaxWidth = pengaturan.lebar_kartu - 10;
-        let prevLineHadPrefix = false;
+            // Render Tata Tertib dengan hanging indent
+            let currentY = y + 12;
+            const ttLines = tataTertib.split('\n');
+            const indent = 3.5; 
+            const ttMaxWidth = pengaturan.lebar_kartu - 10;
+            let prevLineHadPrefix = false;
 
-        ttLines.forEach(line => {
-            if (!line.trim()) {
-                currentY += 1.5;
-                prevLineHadPrefix = false;
-                return;
-            }
+            ttLines.forEach(line => {
+                if (!line.trim()) {
+                    currentY += 1.5;
+                    prevLineHadPrefix = false;
+                    return;
+                }
 
-            const match = line.match(/^(\d+\. |• )/);
-            if (match) {
-                const prefix = match[0];
-                const text = line.substring(prefix.length);
-                doc.text(prefix, xBack + 5, currentY);
+                const match = line.match(/^(\d+\. |• )/);
+                if (match) {
+                    const prefix = match[0];
+                    const text = line.substring(prefix.length);
+                    doc.text(prefix, xBack + 5, currentY);
 
-                const splitText = doc.splitTextToSize(text, ttMaxWidth - indent);
-                doc.text(splitText, xBack + 5 + indent, currentY);
-                currentY += (splitText.length * 3);
-                prevLineHadPrefix = true;
-            } else if (prevLineHadPrefix) {
-                const splitText = doc.splitTextToSize(line, ttMaxWidth - indent);
-                doc.text(splitText, xBack + 5 + indent, currentY);
-                currentY += (splitText.length * 3);
-            } else {
-                const splitText = doc.splitTextToSize(line, ttMaxWidth);
-                doc.text(splitText, xBack + 5, currentY);
-                currentY += (splitText.length * 3);
-            }
-        });
-
+                    const splitText = doc.splitTextToSize(text, ttMaxWidth - indent);
+                    doc.text(splitText, xBack + 5 + indent, currentY);
+                    currentY += (splitText.length * 3);
+                    prevLineHadPrefix = true;
+                } else if (prevLineHadPrefix) {
+                    const splitText = doc.splitTextToSize(line, ttMaxWidth - indent);
+                    doc.text(splitText, xBack + 5 + indent, currentY);
+                    currentY += (splitText.length * 3);
+                } else {
+                    const splitText = doc.splitTextToSize(line, ttMaxWidth);
+                    doc.text(splitText, xBack + 5, currentY);
+                    currentY += (splitText.length * 3);
+                }
+            });
+        }
 
     }
 
