@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import db from '$lib/server/db';
 import { md5 } from '$lib/server/crypto';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	if (locals.user) {
 		if (locals.user.role === 'admin') {
 			throw redirect(302, '/dashboard');
@@ -11,6 +11,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			throw redirect(302, '/siswa');
 		}
 	}
+
+	const registered = url.searchParams.get('registered') === '1';
 
 	try {
 		const result = await db.execute(`
@@ -26,9 +28,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			LIMIT 1
 		`);
 		const pengaturan = result.rows[0];
-		return { pengaturan };
+		return { pengaturan, registered };
 	} catch (e) {
-		return { pengaturan: null };
+		return { pengaturan: null, registered };
 	}
 };
 

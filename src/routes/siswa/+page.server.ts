@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import db from '$lib/server/db';
+import { md5 } from '$lib/server/crypto';
 import { fileToBlobValue } from '$lib/server/photo';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -29,22 +30,54 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401);
 
 		const data = await request.formData();
+		const nisn = data.get('nisn')?.toString().trim() || '';
+		const nis = data.get('nis')?.toString().trim() || '';
 		const nama = data.get('nama')?.toString() || '';
 		const jk = data.get('jk')?.toString() || '';
 		const tempat = data.get('tempat')?.toString() || '';
 		const tgl = data.get('tgl')?.toString() || '';
 		const kelas = data.get('kelas')?.toString() || '';
+		const alamat = data.get('alamat')?.toString() || '';
 
-		await db.execute({
-			sql: `UPDATE siswa SET 
-				nama = ?,
-				jenis_kelamin = ?,
-				tempat_lahir = ?,
-				tanggal_lahir = ?,
-				kelas = ?
-				WHERE user_id = ?`,
-			args: [nama, jk, tempat, tgl, kelas, locals.user.id]
-		});
+		if (!nisn) {
+			return fail(400, { message: 'NISN wajib diisi.' });
+		}
+
+		try {
+			const current = await db.execute({
+				sql: 'SELECT nisn FROM siswa WHERE user_id = ?',
+				args: [locals.user.id]
+			});
+			const oldNisn = current.rows[0]?.nisn;
+
+			await db.execute({
+				sql: `UPDATE siswa SET 
+					nisn = ?,
+					nis = ?,
+					nama = ?,
+					jenis_kelamin = ?,
+					tempat_lahir = ?,
+					tanggal_lahir = ?,
+					kelas = ?,
+					alamat = ?
+					WHERE user_id = ?`,
+				args: [nisn, nis || '', nama, jk, tempat, tgl, kelas, alamat, locals.user.id]
+			});
+
+			if (oldNisn && oldNisn !== nisn) {
+				const newPass = await md5(nisn);
+				await db.execute({
+					sql: 'UPDATE users SET username = ?, password = ? WHERE id = ?',
+					args: [nisn, newPass, locals.user.id]
+				});
+			}
+		} catch (e: any) {
+			if (e.message?.includes('UNIQUE constraint')) {
+				return fail(400, { message: 'NISN atau NIS sudah digunakan siswa lain.' });
+			}
+			console.error('Update siswa error:', e);
+			return fail(500, { message: 'Gagal menyimpan data.' });
+		}
 
 		return { success: true };
 	},

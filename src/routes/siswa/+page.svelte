@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { onDestroy } from 'svelte';
+	import { browser } from '$app/environment';
 	import { replaceBackground, supportsMediaPipe } from '$lib/client/processPhoto';
 
 	let { data } = $props();
@@ -8,6 +9,7 @@
 
 	let submitting1 = $state(false);
 	let submitting2 = $state(false);
+	let printing = $state(false);
 	let modelLoad = $state(false);
 	let notify: { type: 'success' | 'error'; message: string } | null = $state(null);
 	let fotoPreview = $state(siswa.nisn ? `/foto/${siswa.nisn}.jpg?t=${Date.now()}` : '');
@@ -32,6 +34,24 @@
 			}
 			setTimeout(() => { notify = null; }, 4000);
 		};
+	}
+
+	async function handlePrint() {
+		if (printing || !browser) return;
+		printing = true;
+		try {
+			const res = await fetch(`/dashboard/cetak?nisn=${encodeURIComponent(siswa.nisn)}`);
+			if (!res.ok) throw new Error('Failed to fetch print data');
+			const data = await res.json();
+			const { printCards } = await import('$lib/client/printer');
+			await printCards(data);
+		} catch (err) {
+			notify = { type: 'error', message: 'Gagal mencetak kartu' };
+			setTimeout(() => { notify = null; }, 4000);
+			console.error(err);
+		} finally {
+			printing = false;
+		}
 	}
 
 	async function handleUpload({ formData }: { formElement: HTMLFormElement; formData: FormData }) {
@@ -99,6 +119,19 @@
 
 			<form method="POST" action="?/update" use:enhance={handleUpdate} class="space-y-4">
 				<div>
+					<label for="nisn" class="block text-sm font-medium text-cf-text mb-1">NISN</label>
+					<input type="text" name="nisn" id="nisn" value={siswa.nisn} required
+						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+				</div>
+				<div>
+					<label for="nis" class="block text-sm font-medium text-cf-text mb-1">NIS</label>
+					<input type="text" name="nis" id="nis" value={siswa.nis}
+						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+				</div>
+				<div class="text-xs text-cf-muted bg-gray-50 rounded-lg p-3 -mt-2">
+					NISN digunakan sebagai username & password login. Jika diubah, login berikutnya pakai NISN baru.
+				</div>
+				<div>
 					<label for="nama" class="block text-sm font-medium text-cf-text mb-1">Nama Lengkap</label>
 					<input type="text" name="nama" id="nama" value={siswa.nama} required
 						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
@@ -120,6 +153,11 @@
 					<label for="tgl" class="block text-sm font-medium text-cf-text mb-1">Tanggal Lahir</label>
 					<input type="date" name="tgl" id="tgl" value={siswa.tanggal_lahir}
 						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
+				</div>
+				<div>
+					<label for="alamat" class="block text-sm font-medium text-cf-text mb-1">Alamat</label>
+					<textarea name="alamat" id="alamat" rows="2"
+						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition resize-y">{siswa.alamat}</textarea>
 				</div>
 				<div>
 					<label for="kelas" class="block text-sm font-medium text-cf-text mb-1">Kelas</label>
@@ -175,6 +213,20 @@
 				</button>
 			</form>
 		</div>
+
+		<button onclick={handlePrint} disabled={printing}
+			class="w-full py-2.5 bg-cf-orange hover:bg-cf-orange-hover disabled:bg-cf-orange/60 text-white font-semibold rounded-lg text-sm transition flex items-center justify-center gap-2 cursor-pointer mb-3"
+		>
+			{#if printing}
+				<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+					<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+				</svg>
+				Mencetak...
+			{:else}
+				Cetak Kartu Pelajar
+			{/if}
+		</button>
 
 		<form method="POST" action="/logout">
 			<button type="submit"

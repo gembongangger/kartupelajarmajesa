@@ -39,8 +39,13 @@
 					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
 			</div>
 			<div>
-				<label for="kelas" class="block text-sm font-medium text-cf-text mb-1">Kelas</label>
-				<select name="kelas" id="kelas" value={student.kelas} required
+					<label for="alamat" class="block text-sm font-medium text-cf-text mb-1">Alamat</label>
+					<textarea name="alamat" id="alamat" rows="2"
+						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition resize-y">{student.alamat}</textarea>
+				</div>
+			<div>
+					<label for="kelas" class="block text-sm font-medium text-cf-text mb-1">Kelas</label>
+					<select name="kelas" id="kelas" value={student.kelas} required
 					class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition bg-white">
 					<option value="">-- Pilih Kelas --</option>
 					{#each data.kelas as k}

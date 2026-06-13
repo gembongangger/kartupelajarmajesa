@@ -31,6 +31,12 @@
 				</div>
 			{/if}
 
+			{#if data.registered}
+				<div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 text-center">
+					Akun berhasil dibuat! Silakan login dengan NISN Anda.
+				</div>
+			{/if}
+
 			<form method="POST" action="?/login" use:enhance={handleLogin} class="space-y-4">
 				<div>
 					<label for="username" class="block text-sm font-medium text-cf-text mb-1.5">Username</label>
@@ -62,7 +68,13 @@
 				</button>
 			</form>
 
-			<div class="mt-6 text-center">
+			<div class="mt-4 text-center">
+				<a href="/register" class="text-sm text-cf-orange hover:text-cf-orange-hover transition">
+					Belum punya akun? Daftar di sini
+				</a>
+			</div>
+
+			<div class="mt-4 text-center">
 				<p class="text-xs text-cf-muted">Aplikasi SvelteKit Version</p>
 				<p class="text-xs text-cf-muted mt-1">Siswa login: NISN / NISN</p>
 			</div>

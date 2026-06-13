@@ -52,6 +52,7 @@ async function initDb() {
 				jenis_kelamin TEXT CHECK(jenis_kelamin IN ('L','P')) NOT NULL,
 				tempat_lahir TEXT,
 				tanggal_lahir TEXT,
+				alamat TEXT DEFAULT 'Jember',
 				foto BLOB,
 				user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE
 			);
@@ -71,6 +72,7 @@ async function initDb() {
 		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN spasi_kartu INTEGER DEFAULT 4'); } catch { }
 		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN gap_depan_belakang INTEGER DEFAULT 4'); } catch { }
 		try { await db.execute('ALTER TABLE pengaturan ADD COLUMN tampilkan_ttd_depan INTEGER DEFAULT 1'); } catch { }
+		try { await db.execute("ALTER TABLE siswa ADD COLUMN alamat TEXT DEFAULT 'Jember'"); } catch { }
 
 		const pengaturanCheck = await db.execute('SELECT COUNT(*) as cnt FROM pengaturan');
 		if (Number(pengaturanCheck.rows[0]?.cnt) === 0) {

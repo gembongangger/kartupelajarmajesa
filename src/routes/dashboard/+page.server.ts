@@ -97,6 +97,7 @@ export const actions: Actions = {
 					jenis_kelamin TEXT CHECK(jenis_kelamin IN ('L','P')) NOT NULL,
 					tempat_lahir TEXT,
 					tanggal_lahir TEXT,
+					alamat TEXT DEFAULT 'Jember',
 					foto BLOB,
 					user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE
 				);

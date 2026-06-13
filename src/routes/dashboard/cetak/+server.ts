@@ -16,12 +16,18 @@ function blobToDataURL(value: unknown, mime: string): string | null {
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	try {
-		if (!locals.user || locals.user.role !== 'admin') {
+		if (!locals.user) {
 			throw redirect(302, '/');
 		}
 
 		const nisn = url.searchParams.get('nisn');
 		const kelas = url.searchParams.get('kelas');
+
+		if (locals.user.role === 'siswa') {
+			if (!nisn || nisn !== locals.user.username) {
+				throw redirect(302, '/');
+			}
+		}
 
 		let sql = 'SELECT * FROM siswa';
 		let args: any[] = [];

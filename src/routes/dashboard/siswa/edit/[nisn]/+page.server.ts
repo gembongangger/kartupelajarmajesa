@@ -33,6 +33,7 @@ export const actions: Actions = {
         const jk = data.get('jk')?.toString().trim();
         const tempat = data.get('tempat')?.toString().trim();
         const tgl = data.get('tgl')?.toString().trim();
+        const alamat = data.get('alamat')?.toString().trim() || '';
 
         if (!newNisn || !nama || !nis) {
             return fail(400, { message: 'NISN, Nama, dan NIS wajib diisi.' });
@@ -55,9 +56,10 @@ export const actions: Actions = {
                     kelas = ?,
                     jenis_kelamin = ?,
                     tempat_lahir = ?,
-                    tanggal_lahir = ?
+                    tanggal_lahir = ?,
+                    alamat = ?
                     WHERE nisn = ?`,
-                args: [newNisn, nama, nis, kelas, jk, tempat, tgl, params.nisn]
+                args: [newNisn, nama, nis, kelas, jk, tempat, tgl, alamat, params.nisn]
             });
 
             // 3. Jika NISN berubah, update juga username dan password di tabel users

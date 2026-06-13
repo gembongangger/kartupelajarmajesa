@@ -48,7 +48,7 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
 
     const barcodeMap = new Map<string, string | null>();
     await Promise.all(students.map(async (s) => {
-        barcodeMap.set(s.nisn, await generateBarcodeDataURL(s.nisn));
+        barcodeMap.set(s.nis, await generateBarcodeDataURL(s.nis));
     }));
 
     for (let i = 0; i < students.length; i++) {
@@ -92,10 +92,10 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         doc.text(student.nama, valueX, y + 16);
 
         doc.setFont('helvetica', 'bold');
-        doc.text('NISN', labelX, y + 19);
+        doc.text('NIS', labelX, y + 19);
         doc.text(':', colonX, y + 19);
         doc.setFont('helvetica', 'normal');
-        doc.text(student.nisn, valueX, y + 19);
+        doc.text(student.nis, valueX, y + 19);
 
         doc.setFont('helvetica', 'bold');
         doc.text('TTL', labelX, y + 22);
@@ -104,19 +104,20 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         doc.text(`${student.tempat_lahir}, ${tanggalIndonesia(student.tanggal_lahir)}`, valueX, y + 22);
 
         doc.setFont('helvetica', 'bold');
-        doc.text('JK', labelX, y + 25);
+        doc.text('ALAMAT', labelX, y + 25);
         doc.text(':', colonX, y + 25);
         doc.setFont('helvetica', 'normal');
-        doc.text(student.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', valueX, y + 25);
+        const alamatLines = doc.splitTextToSize(student.alamat || '-', 30);
+        doc.text(alamatLines, valueX, y + 25);
 
         // Barcode
-        const barcodeDataURL = barcodeMap.get(student.nisn);
+        const barcodeDataURL = barcodeMap.get(student.nis);
         const barcodeCenterX = x + 22;
         if (barcodeDataURL) {
             doc.addImage(barcodeDataURL, barcodeCenterX - 16, y + 43, 22, 3.5);
         }
         doc.setFontSize(5);
-        doc.text(student.nisn, barcodeCenterX - 4, y + 48, { align: 'center' });
+        doc.text(student.nis, barcodeCenterX - 4, y + 48, { align: 'center' });
 
         // TTD
         if (pengaturan.tampilkan_ttd_depan !== 0) {

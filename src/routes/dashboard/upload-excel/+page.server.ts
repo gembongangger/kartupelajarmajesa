@@ -109,6 +109,7 @@ export const actions: Actions = {
 				const kelas = (row.D || '').toString().trim();
 				const jk = row.E || '';
 				const tempat = row.F || '';
+				const alamat = row.H || '';
 				let tgl = row.G;
 
 				if (!nisn) {
@@ -135,8 +136,8 @@ export const actions: Actions = {
 							args: [nisn, password, 'siswa']
 						},
 						{
-							sql: 'INSERT INTO siswa (nama, nis, nisn, kelas, jenis_kelamin, tempat_lahir, tanggal_lahir, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, last_insert_rowid())',
-							args: [nama, nis, nisn, kelas, jk, tempat, tgl]
+							sql: 'INSERT INTO siswa (nama, nis, nisn, kelas, jenis_kelamin, tempat_lahir, tanggal_lahir, alamat, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, last_insert_rowid())',
+							args: [nama, nis, nisn, kelas, jk, tempat, tgl, alamat]
 						}
 					], 'write');
 
