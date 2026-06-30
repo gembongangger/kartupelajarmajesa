@@ -1,3 +1,16 @@
+let cachedFontB64: string | null = null;
+
+async function getFontB64(): Promise<string> {
+    if (cachedFontB64) return cachedFontB64;
+    const res = await fetch('/assets/fonts/Montserrat-Arabic-Regular.ttf');
+    const buf = await res.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    cachedFontB64 = btoa(bin);
+    return cachedFontB64;
+}
+
 function tanggalIndonesia(tanggal: string) {
     if (!tanggal || tanggal === '0000-00-00') return '-';
     const bulan = [
@@ -38,6 +51,10 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         : pengaturan.jenis_kertas?.toLowerCase() || 'a4';
     const doc = new jsPDF('p', 'mm', paperSize);
 
+    const fontB64 = await getFontB64();
+    doc.addFileToVFS('Montserrat-Arabic-Regular.ttf', fontB64);
+    doc.addFont('Montserrat-Arabic-Regular.ttf', 'Montserrat-Arabic', 'normal');
+
     const ttdDate = `Ditetapkan di: ${pengaturan.kota_ttd || '......'}, ${tanggalIndonesia(pengaturan.tanggal_ttd)}`;
     const tataTertib = (pengaturan.tata_tertib ?? '')
         .replace(/\r\n/g, '\n').replace(/\r/g, '\n')
@@ -72,51 +89,55 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         // Foto Siswa
         if (student.foto) {
             doc.saveGraphicsState();
-            doc.roundedRect(x + 4, y + 12, 18, 22, 2, 2, null);
+            doc.roundedRect(x + 4, y + 18, 18, 22, 2, 2, null);
             doc.clip();
             doc.discardPath();
-            doc.addImage(student.foto, x + 4, y + 12, 18, 22);
+            doc.addImage(student.foto, x + 4, y + 18, 18, 22);
             doc.restoreGraphicsState();
         }
 
         // Data Siswa
         const labelX = x + 24;
-        const colonX = labelX + 10;
+        const colonX = x + 48;
         const valueX = colonX + 2;
 
-        doc.setFontSize(6);
-        doc.setFont('helvetica', 'bold');
-        doc.text('NAMA', labelX, y + 16);
-        doc.text(':', colonX, y + 16);
-        doc.setFont('helvetica', 'normal');
-        doc.text(student.nama, valueX, y + 16);
+        doc.setFontSize(12);
+        doc.setFont('Montserrat-Arabic', 'normal');
+        doc.text('KARTU TANDA PELAJAR', labelX, y + 16);
 
-        doc.setFont('helvetica', 'bold');
-        doc.text('NIS', labelX, y + 19);
-        doc.text(':', colonX, y + 19);
-        doc.setFont('helvetica', 'normal');
-        doc.text(student.nis, valueX, y + 19);
+        doc.setFontSize(10);
+        doc.setFont('Montserrat-Arabic', 'normal');
+        doc.text(student.nama, x + pengaturan.lebar_kartu / 2, y + 20, { align: 'center' });
 
-        doc.setFont('helvetica', 'bold');
-        doc.text('TTL', labelX, y + 22);
-        doc.text(':', colonX, y + 22);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${student.tempat_lahir}, ${tanggalIndonesia(student.tanggal_lahir)}`, valueX, y + 22);
-
-        doc.setFont('helvetica', 'bold');
-        doc.text('ALAMAT', labelX, y + 25);
+        doc.setFontSize(7);
+        doc.setFont('Montserrat-Arabic', 'normal');
+        doc.text('NISN', labelX, y + 25);
         doc.text(':', colonX, y + 25);
-        doc.setFont('helvetica', 'normal');
+        doc.text(student.nis, valueX, y + 25);
+
+        doc.setFont('Montserrat-Arabic', 'normal');
+        doc.text('Jenis kelamin', labelX, y + 28);
+        doc.text(':', colonX, y + 28);
+        doc.text(student.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', valueX, y + 28);
+
+        doc.setFont('Montserrat-Arabic', 'normal');
+        doc.text('TTL', labelX, y + 31);
+        doc.text(':', colonX, y + 31);
+        doc.text(`${student.tempat_lahir}, ${tanggalIndonesia(student.tanggal_lahir)}`, valueX, y + 31);
+
+        doc.setFont('Montserrat-Arabic', 'normal');
+        doc.text('Alamat', labelX, y + 34);
+        doc.text(':', colonX, y + 34);
         const alamatLines = doc.splitTextToSize(student.alamat || '-', 30);
-        doc.text(alamatLines, valueX, y + 25);
+        doc.text(alamatLines, valueX, y + 34);
 
         // Barcode
         const barcodeDataURL = barcodeMap.get(student.nis);
         const barcodeCenterX = x + 22;
         if (barcodeDataURL) {
-            doc.addImage(barcodeDataURL, barcodeCenterX - 16, y + 43, 22, 3.5);
+            doc.addImage(barcodeDataURL, barcodeCenterX - 16, y + 42, 22, 3.5);
         }
-        doc.setFontSize(5);
+        doc.setFontSize(7);
         doc.text(student.nis, barcodeCenterX - 4, y + 48, { align: 'center' });
 
         // TTD
@@ -124,15 +145,15 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
             const ttdCenterX = x + pengaturan.lebar_kartu - 20;
             doc.setFontSize(5.5);
             doc.setFont('helvetica', 'normal');
-            doc.text(ttdDate, ttdCenterX, y + 35, { align: 'center' });
-            doc.text('Kepala Sekolah,', ttdCenterX, y + 38, { align: 'center' });
+            doc.text(ttdDate, ttdCenterX, y + 46, { align: 'center' });
+            doc.text('Kepala Sekolah,', ttdCenterX, y + 49, { align: 'center' });
             if (pengaturan.tanda_tangan) {
-                doc.addImage(pengaturan.tanda_tangan, ttdCenterX - 7, y + 39.5, 14, 5);
+                doc.addImage(pengaturan.tanda_tangan, ttdCenterX - 7, y + 50.5, 14, 5);
             }
             doc.setFont('helvetica', 'bold');
-            doc.text(headMaster, ttdCenterX, y + 45.5, { align: 'center' });
+            doc.text(headMaster, ttdCenterX, y + 56.5, { align: 'center' });
             doc.setFont('helvetica', 'normal');
-            doc.text(headNip, ttdCenterX, y + 48.5, { align: 'center' });
+            doc.text(headNip, ttdCenterX, y + 59.5, { align: 'center' });
         }
 
         // Back Card
