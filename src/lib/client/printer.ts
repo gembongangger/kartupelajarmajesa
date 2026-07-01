@@ -98,38 +98,41 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
 
         // Data Siswa
         const labelX = x + 24;
-        const colonX = x + 48;
-        const valueX = colonX + 2;
+        const colonX = x + 34;
+        const valueX = colonX + 1.5;
 
-        doc.setFontSize(12);
+        doc.setFontSize(11);
         doc.setFont('Montserrat-Arabic', 'normal');
         doc.text('KARTU TANDA PELAJAR', labelX, y + 16);
 
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         doc.setFont('Montserrat-Arabic', 'normal');
         doc.text(student.nama, x + pengaturan.lebar_kartu / 2, y + 20, { align: 'center' });
 
-        doc.setFontSize(7);
+        doc.setFontSize(6);
         doc.setFont('Montserrat-Arabic', 'normal');
-        doc.text('NISN', labelX, y + 25);
-        doc.text(':', colonX, y + 25);
-        doc.text(student.nis, valueX, y + 25);
+        doc.text('NISN', labelX, y + 24);
+        doc.text(':', colonX, y + 24);
+        doc.text(student.nisn, valueX, y + 24);
 
         doc.setFont('Montserrat-Arabic', 'normal');
-        doc.text('Jenis kelamin', labelX, y + 28);
-        doc.text(':', colonX, y + 28);
-        doc.text(student.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', valueX, y + 28);
+        doc.text('JK', labelX, y + 27);
+        doc.text(':', colonX, y + 27);
+        doc.text(student.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan', valueX, y + 27);
 
         doc.setFont('Montserrat-Arabic', 'normal');
-        doc.text('TTL', labelX, y + 31);
-        doc.text(':', colonX, y + 31);
-        doc.text(`${student.tempat_lahir}, ${tanggalIndonesia(student.tanggal_lahir)}`, valueX, y + 31);
+        doc.text('TTL', labelX, y + 30);
+        doc.text(':', colonX, y + 30);
+        doc.text(`${student.tempat_lahir}, ${tanggalIndonesia(student.tanggal_lahir)}`, valueX, y + 30);
 
         doc.setFont('Montserrat-Arabic', 'normal');
-        doc.text('Alamat', labelX, y + 34);
-        doc.text(':', colonX, y + 34);
-        const alamatLines = doc.splitTextToSize(student.alamat || '-', 30);
-        doc.text(alamatLines, valueX, y + 34);
+        doc.text('Alamat', labelX, y + 33);
+        doc.text(':', colonX, y + 33);
+        const alamatLines = doc.splitTextToSize(student.alamat || '-', 49);
+        doc.text(alamatLines[0], valueX, y + 33);
+        for (let i = 1; i < alamatLines.length; i++) {
+            doc.text(alamatLines[i], labelX, y + 33 + (i * 3));
+        }
 
         // Barcode
         const barcodeDataURL = barcodeMap.get(student.nis);
