@@ -81,7 +81,7 @@
 		</div>
 
 		<div class="text-center mt-6 text-xs text-white/60">
-			&copy; 2025 - Gembong
+			&copy; 2025 - Dedy Tugas
 		</div>
 	</div>
 </div>
