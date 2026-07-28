@@ -65,7 +65,8 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
 
     const barcodeMap = new Map<string, string | null>();
     await Promise.all(students.map(async (s) => {
-        barcodeMap.set(s.nis, await generateBarcodeDataURL(s.nis));
+        const nisClean = String(s.nis).replace(/\.0$/, '');
+        barcodeMap.set(nisClean, await generateBarcodeDataURL(nisClean));
     }));
 
     for (let i = 0; i < students.length; i++) {
@@ -135,13 +136,14 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
         }
 
         // Barcode
-        const barcodeDataURL = barcodeMap.get(student.nis);
+        const nisClean = String(student.nis).replace(/\.0$/, '');
+        const barcodeDataURL = barcodeMap.get(nisClean);
         const barcodeCenterX = x + 22;
         if (barcodeDataURL) {
             doc.addImage(barcodeDataURL, barcodeCenterX - 16, y + 42, 22, 3.5);
         }
         doc.setFontSize(7);
-        doc.text(student.nis, barcodeCenterX - 4, y + 48, { align: 'center' });
+        doc.text(nisClean, barcodeCenterX - 4, y + 48, { align: 'center' });
 
         // TTD
         if (pengaturan.tampilkan_ttd_depan !== 0) {
