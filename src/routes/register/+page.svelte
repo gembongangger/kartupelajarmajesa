@@ -35,8 +35,8 @@
 						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text placeholder-cf-muted focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
 				</div>
 				<div>
-					<label for="nis" class="block text-sm font-medium text-cf-text mb-1">NIS</label>
-					<input type="text" name="nis" id="nis" placeholder="Nomor Induk Sekolah"
+					<label for="nis" class="block text-sm font-medium text-cf-text mb-1">NIS <span class="text-cf-danger">*</span></label>
+					<input type="text" name="nis" id="nis" required placeholder="Nomor Induk Sekolah"
 						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text placeholder-cf-muted focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
 				</div>
 				<div>
@@ -64,18 +64,18 @@
 					</select>
 				</div>
 				<div>
-					<label for="tempat" class="block text-sm font-medium text-cf-text mb-1">Tempat Lahir</label>
-					<input type="text" name="tempat" id="tempat" placeholder="Tempat lahir"
+					<label for="tempat" class="block text-sm font-medium text-cf-text mb-1">Tempat Lahir <span class="text-cf-danger">*</span></label>
+					<input type="text" name="tempat" id="tempat" required placeholder="Tempat lahir"
 						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text placeholder-cf-muted focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
 				</div>
 				<div>
-					<label for="tgl" class="block text-sm font-medium text-cf-text mb-1">Tanggal Lahir</label>
-					<input type="date" name="tgl" id="tgl"
+					<label for="tgl" class="block text-sm font-medium text-cf-text mb-1">Tanggal Lahir <span class="text-cf-danger">*</span></label>
+					<input type="date" name="tgl" id="tgl" required
 						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition">
 				</div>
 				<div>
-					<label for="alamat" class="block text-sm font-medium text-cf-text mb-1">Alamat</label>
-					<textarea name="alamat" id="alamat" rows="2" placeholder="Alamat lengkap"
+					<label for="alamat" class="block text-sm font-medium text-cf-text mb-1">Alamat <span class="text-cf-danger">*</span></label>
+					<textarea name="alamat" id="alamat" rows="2" required placeholder="Alamat lengkap"
 						class="w-full px-3 py-2.5 border border-cf-border rounded-lg text-sm text-cf-text placeholder-cf-muted focus:outline-none focus:ring-2 focus:ring-cf-orange focus:border-cf-orange transition resize-y"></textarea>
 				</div>
 

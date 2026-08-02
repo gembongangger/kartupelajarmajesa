@@ -30,8 +30,18 @@ export const actions: Actions = {
 		const tgl = data.get('tgl')?.toString().trim() || '';
 		const alamat = data.get('alamat')?.toString().trim() || '';
 
-		if (!nisn || !nama || !kelas || !jk) {
-			return fail(400, { message: 'NISN, Nama, Kelas, dan Jenis Kelamin wajib diisi.' });
+		const empty: string[] = [];
+		if (!nisn) empty.push('NISN');
+		if (!nis) empty.push('NIS');
+		if (!nama) empty.push('Nama');
+		if (!kelas) empty.push('Kelas');
+		if (!jk) empty.push('Jenis Kelamin');
+		if (!tempat) empty.push('Tempat Lahir');
+		if (!tgl) empty.push('Tanggal Lahir');
+		if (!alamat) empty.push('Alamat');
+
+		if (empty.length > 0) {
+			return fail(400, { message: `Data wajib diisi: ${empty.join(', ')}.` });
 		}
 
 		try {
