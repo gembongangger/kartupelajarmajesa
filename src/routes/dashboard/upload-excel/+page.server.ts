@@ -21,6 +21,32 @@ function formatDate(date: Date) {
 	return `${y}-${m}-${d}`;
 }
 
+function parseTgl(value: unknown): string {
+	if (value instanceof Date && !isNaN(value.getTime())) return formatDate(value);
+	if (typeof value === 'number') {
+		return formatDate(new Date(Math.round((value - 25569) * 86400 * 1000)));
+	}
+	if (typeof value === 'string') {
+		const s = value.trim();
+		if (!s) return '';
+		let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+		if (m) return formatDate(new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+		m = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+		if (m) {
+			let day = Number(m[1]);
+			let month = Number(m[2]);
+			let year = Number(m[3]);
+			if (year < 100) year += 2000;
+			if (day > 12) { const t = day; day = month; month = t; }
+			return formatDate(new Date(year, month - 1, day));
+		}
+		const d = new Date(s);
+		if (!isNaN(d.getTime())) return formatDate(d);
+		return s;
+	}
+	return '';
+}
+
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		if (!locals.user || locals.user.role !== 'admin') return fail(401);
@@ -35,7 +61,7 @@ export const actions: Actions = {
 			const workbook = XLSX.read(buffer, { cellDates: true });
 			const sheetName = workbook.SheetNames[0];
 			const sheet = workbook.Sheets[sheetName];
-			const rows = XLSX.utils.sheet_to_json(sheet, { header: 'A' }) as any[];
+			const rows = XLSX.utils.sheet_to_json(sheet, { header: 'A', raw: false }) as any[];
 
 			const validKelasResult = await db.execute('SELECT nama FROM kelas');
 			const validKelasSet = new Set(validKelasResult.rows.map((r: any) => String(r.nama)));
@@ -43,7 +69,7 @@ export const actions: Actions = {
 			const invalidKelas: string[] = [];
 			for (let i = 1; i < rows.length; i++) {
 				const row = rows[i];
-				const nisn = row.C?.toString() || '';
+				const nisn = String(row.C ?? '').trim();
 				if (!nisn) continue;
 				const kelas = (row.D || '').toString().trim();
 				if (kelas && !validKelasSet.has(kelas)) {
@@ -67,8 +93,8 @@ export const actions: Actions = {
 
 			for (let i = 1; i < rows.length; i++) {
 				const row = rows[i];
-				const nisn = row.C?.toString() || '';
-				const nis = row.B?.toString() || '';
+				const nisn = String(row.C ?? '').trim();
+				const nis = String(row.B ?? '').trim();
 
 				if (!nisn) continue;
 
@@ -104,27 +130,18 @@ export const actions: Actions = {
 			for (let i = 1; i < rows.length; i++) {
 				const row = rows[i];
 				const nama = row.A || '';
-				const nis = row.B || '';
-				const nisn = row.C?.toString() || '';
+				const nis = String(row.B ?? '').trim();
+				const nisn = String(row.C ?? '').trim();
 				const kelas = (row.D || '').toString().trim();
 				const jk = row.E || '';
 				const tempat = row.F || '';
 				const alamat = row.H || '';
-				let tgl = row.G;
+				const tgl = parseTgl(row.G);
 
 				if (!nisn) {
 					failed++;
 					errorDetails.push(`Baris ${i + 1}: NISN kosong.`);
 					continue;
-				}
-
-				if (tgl instanceof Date) {
-					tgl = formatDate(tgl);
-				} else if (typeof tgl === 'number') {
-					const date = new Date(Math.round((tgl - 25569) * 86400 * 1000));
-					tgl = formatDate(date);
-				} else {
-					tgl = tgl?.toString() || '';
 				}
 
 				try {
