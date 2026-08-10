@@ -21,6 +21,10 @@ function tanggalIndonesia(tanggal: string) {
     return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+function titleCase(str: string) {
+    return str.toLowerCase().replace(/\b\p{L}/gu, (c) => c.toUpperCase());
+}
+
 async function generateBarcodeDataURL(text: string): Promise<string | null> {
     try {
         const bwipjs = await import('bwip-js');
@@ -108,7 +112,23 @@ export async function printCards(data: { students: any[], pengaturan: any }) {
 
         doc.setFontSize(9);
         doc.setFont('Montserrat-Arabic', 'normal');
-        doc.text(student.nama, x + pengaturan.lebar_kartu / 2, y + 20, { align: 'center' });
+        const namaTampil = titleCase(student.nama || '-');
+        const maxWidth = pengaturan.lebar_kartu - 26;
+        let namaSize = 9;
+        while (namaSize > 6 && doc.getTextWidth(namaTampil) > maxWidth) {
+            namaSize -= 0.5;
+            doc.setFontSize(namaSize);
+        }
+        let namaFinal = namaTampil;
+        if (doc.getTextWidth(namaFinal) > maxWidth) {
+            const words = namaFinal.split(' ');
+            for (let i = words.length - 1; i > 0; i--) {
+                if (doc.getTextWidth(words.join(' ')) <= maxWidth) break;
+                words[i] = words[i][0];
+            }
+            namaFinal = words.join(' ');
+        }
+        doc.text(namaFinal, labelX, y + 20);
 
         doc.setFontSize(6);
         doc.setFont('Montserrat-Arabic', 'normal');
